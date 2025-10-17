@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Flip Countdown</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="app" class="app">
+    <div class="bg"></div>
+
+    <div class="content">
+      <div class="time-wrap" id="timeWrap" title="Click to set time (MM:SS). Press Enter to apply.">
+        <div class="flip mm-tens" data-digit="0"></div>
+        <div class="flip mm-ones" data-digit="0"></div>
+        <div class="colon">:</div>
+        <div class="flip ss-tens" data-digit="0"></div>
+        <div class="flip ss-ones" data-digit="0"></div>
+      </div>
+
+      <input id="timeInput" class="time-input" maxlength="5" placeholder="MM:SS" aria-label="Set time MM:SS" />
+
+      <div id="note" class="note" contenteditable="false" spellcheck="false"
+           title="Click to write a note. Press Enter to save."></div>
+
+      <div class="hint" aria-hidden="true"></div>
+    </div>
+
+    <!-- audio src set from JS -->
+    <audio id="alarm" preload="auto"></audio>
+  </div>
+
+  <!-- Load as module so we can resolve assets robustly -->
+  <script type="module" src="renderer.js"></script>
+</body>
+</html>

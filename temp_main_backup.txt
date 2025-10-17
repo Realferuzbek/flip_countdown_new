@@ -1,0 +1,40 @@
+import { app, BrowserWindow } from 'electron';
+import { fileURLToPath } from 'url';
+import path from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+let win;
+
+function createWindow() {
+  win = new BrowserWindow({
+    width: 1280,
+    height: 800,
+    backgroundColor: '#000000',
+    autoHideMenuBar: true,      // ← hides "File/Edit/…" bar
+    show: false,                // show when ready
+    webPreferences: {
+      contextIsolation: true,
+      preload: path.join(__dirname, 'preload.js')
+    }
+  });
+
+  win.setMenu(null);            // extra safety: no menu at all
+  win.once('ready-to-show', () => win.show());
+
+  win.loadFile(path.join(__dirname, 'renderer', 'index.html'));
+
+  win.on('closed', () => { win = null; });
+}
+
+app.whenReady().then(createWindow);
+
+app.on('window-all-closed', () => {
+  // On Windows we can quit when last window closes
+  app.quit();
+});
+
+app.on('activate', () => {
+  if (BrowserWindow.getAllWindows().length === 0) createWindow();
+});

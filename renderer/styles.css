@@ -1,0 +1,58 @@
+:root { --fg: #ffffff; --shadow: rgba(0,0,0,0.35); }
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { background: #000; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial; color: var(--fg); }
+
+/* Layout */
+.app { position: relative; height: 100vh; overflow: hidden; }
+.bg { position: absolute; inset: 0; z-index: 0; background: #000; } /* JS sets the image */
+.content {
+  position: relative; z-index: 1; height: 100%;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 16px; padding: 24px; text-align: center;
+}
+
+/* Timer row (clean digits, no tiles) */
+.time-wrap { display: flex; align-items: center; justify-content: center; gap: clamp(8px, 1.4vw, 20px); margin: 0 auto; font-variant-numeric: tabular-nums; }
+.flip { position: relative; width: clamp(48px, 12vw, 140px); height: clamp(64px, 16vw, 180px); margin: 0; }
+.flip::before, .flip::after {
+  content: attr(data-digit);
+  position: absolute; inset: 0;
+  display: grid; place-items: center;
+  font-weight: 800; letter-spacing: 0.02em;
+  font-size: clamp(56px, 16vw, 180px);
+  color: #fff; text-shadow: none; background: transparent; border: 0; border-radius: 0; box-shadow: none;
+}
+.flip .top, .flip .bottom { display: none !important; }
+
+.colon {
+  width: clamp(28px, 6.5vw, 80px);
+  display: grid; place-items: center;
+  padding: 0; line-height: 1;
+  font-size: clamp(48px, 14vw, 160px); font-weight: 700; color: #fff;
+}
+
+/* Time input overlay */
+.time-input {
+  opacity: 0; pointer-events: none; transition: opacity 120ms ease;
+  background: rgba(0,0,0,0.6); color: #fff; border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 10px; padding: 10px 14px; font-size: 18px; width: 140px; text-align: center;
+}
+.time-input.active { opacity: 1; pointer-events: auto; }
+
+/* Note: bold, bigger, a little lower */
+.note {
+  min-height: 36px; max-width: min(80ch, 90vw); padding: 8px 14px; border-radius: 12px;
+  background: rgba(0,0,0,0.22); border: 1px solid rgba(255,255,255,0.16);
+  color: #fff; font-weight: 800; font-size: clamp(18px, 2.2vw, 36px);
+  line-height: 1.25; outline: none; opacity: 0.9; margin-top: clamp(12px, 2.5vh, 28px);
+}
+.note[contenteditable="true"] { background: rgba(0,0,0,0.35); opacity: 1; }
+.note:empty::before { content: 'Click here to write a note…'; color: rgba(255,255,255,0.55); }
+
+.hint { display: none !important; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .bg { transition: filter 180ms ease; }
+  .note, .time-input { transition: opacity 120ms ease; }
+}

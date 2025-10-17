@@ -1,0 +1,43 @@
+{
+  "name": "flip-countdown",
+  "version": "1.0.3",
+  "description": "Local-only flip countdown timer",
+  "author": "Feruzbek",
+  "main": "main.js",
+  "type": "module",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder"
+  },
+  "devDependencies": {
+    "electron": "30.0.0",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "com.feruzbek.flipcountdown",
+    "productName": "Flip Countdown",
+    "directories": {
+      "buildResources": "assets"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "renderer/**/*.html",
+      "renderer/**/*.js",
+      "renderer/**/*.css",
+      "assets/background.jpg",
+      "assets/alarm.mp3",
+      "package.json"
+    ],
+    "win": {
+      "target": ["nsis"]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  }
+}
