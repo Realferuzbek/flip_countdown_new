@@ -41,7 +41,10 @@
     "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
     "win": {
       "target": ["nsis"],
-      "icon": "assets/icon.ico"
+      "icon": "assets/icon.ico",
+      "//codeSigning": "Set CS_PFX_FILE and CS_PFX_PASSWORD env vars or provide certificateFile/certificatePassword below when ready.",
+      "//certificateFile": "path/to/cert.pfx",
+      "//certificatePassword": "${env.CS_PFX_PASSWORD}"
     },
     "nsis": {
       "oneClick": false,
@@ -53,7 +56,13 @@
     "mac": {
       "target": ["dmg"],
       "category": "public.app-category.utilities",
-      "icon": "assets/icon.icns"
+      "icon": "assets/icon.icns",
+      "//hardenedRuntime": "Set to true when enabling notarization.",
+      "//entitlements": "build/entitlements.mac.plist",
+      "//entitlementsInherit": "build/entitlements.mac.plist",
+      "//appleId": "${env.APPLE_ID}",
+      "//appleIdPassword": "${env.APPLE_APP_SPECIFIC_PASSWORD}",
+      "//teamId": "${env.APPLE_TEAM_ID}"
     },
     "dmg": {
       "backgroundColor": "#000000"
@@ -63,6 +72,7 @@
       "category": "Utility",
       "icon": "assets/icon.png"
     },
+    "//afterSign": "Hook notarization script here when enabling macOS/Windows signing (e.g., ./scripts/notarize.js).",
     "publish": "never"
   }
 }
