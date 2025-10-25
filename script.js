@@ -8,6 +8,15 @@ let timer = null;           // setInterval handle
 let alarmPlaying = false;
 let compactMode = false;
 
+const DEFAULT_BACKGROUND = './assets/background.jpg';
+const BG_STORAGE_KEY = 'bg:src';
+const SHEET_TRANSITION_MS = 180;
+
+let currentBackgroundSrc = '';
+let backgroundOptions = [];
+let sheetDismissTimer = null;
+let lastFocusedElement = null;
+
 if (!window.electronAPI) window.electronAPI = { setCompactMode: () => {} };
 
 // ----- Elements -----
@@ -20,6 +29,24 @@ const timeInput= document.getElementById('timeInput');
 const note     = document.getElementById('note');
 const alarm    = document.getElementById('alarm');
 const bgDiv    = document.querySelector('.bg');
+const fullscreenBtn = document.getElementById('btn-fullscreen');
+const settingsBtn = document.getElementById('btn-settings');
+const bgPicker = document.getElementById('bg-picker');
+const bgGrid = document.getElementById('bg-grid');
+const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent || '' : '';
+const isIPhone = /\biPhone\b/i.test(userAgent);
+
+if (settingsBtn) {
+  settingsBtn.title = 'Background settings';
+}
+if (fullscreenBtn) {
+  fullscreenBtn.title = 'Enter fullscreen';
+}
+
+const savedBackgroundOnInit = getSavedBackground();
+if (savedBackgroundOnInit) {
+  setBackground(savedBackgroundOnInit, { persist: false, updateSelection: false });
+}
 
 // ----- Asset loading (works in dev and packaged) -----
 function resolveBundled(relPath) {
@@ -30,11 +57,9 @@ function resolveBundled(relPath) {
 
 function loadBundledAssets() {
   // Background
-  const bgUrl = resolveBundled('./assets/background.jpg');
-  bgDiv.style.backgroundImage = `url("${bgUrl}")`;
-  bgDiv.style.backgroundSize = 'cover';
-  bgDiv.style.backgroundPosition = 'center';
-  bgDiv.style.backgroundRepeat = 'no-repeat';
+  if (!currentBackgroundSrc) {
+    setBackground(DEFAULT_BACKGROUND, { persist: false, updateSelection: false });
+  }
   bgDiv.style.filter = 'brightness(0.35)';
 
   // Alarm
@@ -48,7 +73,9 @@ document.addEventListener('DOMContentLoaded', () => {
   document.body.tabIndex = -1;
   document.body.focus();
   loadBundledAssets();
+  applySavedBackground();
   render();
+  initBackgroundPicker().catch(() => {});
 });
 
 // ===== Helpers =====
@@ -76,6 +103,293 @@ function applyCompactMode(compact) {
   if (api && typeof api.setCompactMode === 'function') {
     api.setCompactMode(compactMode);
   }
+}
+
+// ===== Fullscreen =====
+function getFullscreenElement() {
+  return document.fullscreenElement ||
+    document.webkitFullscreenElement ||
+    document.mozFullScreenElement ||
+    document.msFullscreenElement ||
+    null;
+}
+
+function requestFullscreen(el) {
+  if (!el) return;
+  const request =
+    el.requestFullscreen ||
+    el.webkitRequestFullscreen ||
+    el.mozRequestFullScreen ||
+    el.msRequestFullscreen;
+  if (typeof request !== 'function') return;
+  try {
+    const result = request.call(el);
+    if (result && typeof result.then === 'function') {
+      result.catch(() => {});
+    }
+  } catch (_) {}
+}
+
+function exitFullscreen() {
+  const exit =
+    document.exitFullscreen ||
+    document.webkitExitFullscreen ||
+    document.mozCancelFullScreen ||
+    document.msExitFullscreen;
+  if (typeof exit !== 'function') return;
+  try {
+    const result = exit.call(document);
+    if (result && typeof result.then === 'function') {
+      result.catch(() => {});
+    }
+  } catch (_) {}
+}
+
+function isFullscreenSupported() {
+  const el = document.documentElement;
+  if (!el) return false;
+  return Boolean(
+    document.fullscreenEnabled ||
+    document.webkitFullscreenEnabled ||
+    document.mozFullScreenEnabled ||
+    document.msFullscreenEnabled ||
+    el.requestFullscreen ||
+    el.webkitRequestFullscreen ||
+    el.mozRequestFullScreen ||
+    el.msRequestFullscreen
+  );
+}
+
+const fullscreenSupported = isFullscreenSupported();
+
+function updateFullscreenButtonState() {
+  if (!fullscreenBtn) return;
+  const active = Boolean(getFullscreenElement());
+  fullscreenBtn.setAttribute('aria-pressed', active ? 'true' : 'false');
+  fullscreenBtn.setAttribute('aria-label', active ? 'Exit fullscreen' : 'Enter fullscreen');
+  fullscreenBtn.title = active ? 'Exit fullscreen' : 'Enter fullscreen';
+}
+
+function toggleFullscreen() {
+  if (!fullscreenSupported) return;
+  if (getFullscreenElement()) {
+    exitFullscreen();
+  } else {
+    applyCompactMode(false);
+    requestFullscreen(document.documentElement);
+  }
+}
+
+if (fullscreenBtn) {
+  const lacksFullscreenAPI =
+    !(document.documentElement && typeof document.documentElement.requestFullscreen === 'function') &&
+    !document.webkitFullscreenElement;
+  if (isIPhone && lacksFullscreenAPI) {
+    fullscreenBtn.hidden = true;
+  } else if (!fullscreenSupported) {
+    fullscreenBtn.hidden = true;
+  } else {
+    fullscreenBtn.hidden = false;
+    updateFullscreenButtonState();
+    fullscreenBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      toggleFullscreen();
+    });
+    const fullscreenEvents = ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'];
+    fullscreenEvents.forEach((eventName) => {
+      document.addEventListener(eventName, updateFullscreenButtonState);
+    });
+  }
+}
+
+// ===== Background picker =====
+function resolveBackgroundSrc(src) {
+  if (!src) return null;
+  if (/^(?:https?:|data:)/i.test(src) || src.startsWith('/')) return src;
+  const candidate = src.startsWith('.') ? src : `./${src}`;
+  try {
+    return resolveBundled(candidate);
+  } catch (_) {
+    try {
+      return resolveBundled(src);
+    } catch (__) {
+      return src;
+    }
+  }
+}
+
+function getSavedBackground() {
+  try {
+    return localStorage.getItem(BG_STORAGE_KEY) || '';
+  } catch (_) {
+    return '';
+  }
+}
+
+function updateThumbSelection(src) {
+  if (!bgGrid) return;
+  const nodes = bgGrid.querySelectorAll('[data-bg-option]');
+  nodes.forEach((node) => {
+    const isActive = node.dataset.bgOption === src;
+    node.classList.toggle('is-selected', isActive);
+    node.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+  });
+}
+
+function setBackground(src, options = {}) {
+  if (!bgDiv) return;
+  if (!src) return;
+  const { persist = false, updateSelection = true } = options;
+  const resolved = resolveBackgroundSrc(src);
+  if (!resolved) return;
+  const nextImage = `url("${resolved}")`;
+  if (bgDiv.style.backgroundImage !== nextImage) {
+    bgDiv.style.backgroundImage = nextImage;
+    bgDiv.style.backgroundSize = 'cover';
+    bgDiv.style.backgroundPosition = 'center';
+    bgDiv.style.backgroundRepeat = 'no-repeat';
+    bgDiv.style.backgroundAttachment = 'fixed';
+  }
+  currentBackgroundSrc = src;
+  if (persist) {
+    try {
+      localStorage.setItem(BG_STORAGE_KEY, src);
+    } catch (_) {}
+  }
+  if (updateSelection) updateThumbSelection(src);
+}
+
+function applySavedBackground() {
+  const saved = getSavedBackground();
+  if (saved) {
+    setBackground(saved, { persist: false });
+  }
+}
+
+async function loadBackgroundList() {
+  try {
+    const response = await fetch('assets/images.json', { cache: 'no-store' });
+    if (!response.ok) return [];
+    const payload = await response.json();
+    if (!Array.isArray(payload)) return [];
+    const seen = new Set();
+    const filtered = [];
+    payload.forEach((entry) => {
+      if (typeof entry !== 'string') return;
+      const trimmed = entry.trim();
+      if (!trimmed) return;
+      if (!/\.(png|jpe?g)$/i.test(trimmed)) return;
+      if (seen.has(trimmed)) return;
+      seen.add(trimmed);
+      filtered.push(trimmed);
+    });
+    return filtered;
+  } catch (_) {
+    return [];
+  }
+}
+
+function isSheetOpen() {
+  return Boolean(bgPicker && !bgPicker.hidden && bgPicker.classList.contains('is-active'));
+}
+
+function openBackgroundPicker() {
+  if (!bgPicker || isSheetOpen()) return;
+  if (sheetDismissTimer) {
+    clearTimeout(sheetDismissTimer);
+    sheetDismissTimer = null;
+  }
+  lastFocusedElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  bgPicker.hidden = false;
+  document.body.classList.add('sheet-open');
+  requestAnimationFrame(() => {
+    if (!bgPicker) return;
+    bgPicker.classList.add('is-active');
+    if (settingsBtn) settingsBtn.setAttribute('aria-pressed', 'true');
+    if (bgGrid) {
+      const target = bgGrid.querySelector('.bg-thumb.is-selected') || bgGrid.querySelector('.bg-thumb');
+      if (target && typeof target.focus === 'function') {
+        target.focus({ preventScroll: true });
+      }
+    }
+  });
+}
+
+function closeBackgroundPicker({ restoreFocus = true } = {}) {
+  if (!bgPicker || bgPicker.hidden) return;
+  bgPicker.classList.remove('is-active');
+  document.body.classList.remove('sheet-open');
+  if (settingsBtn) settingsBtn.setAttribute('aria-pressed', 'false');
+  if (sheetDismissTimer) {
+    clearTimeout(sheetDismissTimer);
+    sheetDismissTimer = null;
+  }
+  sheetDismissTimer = setTimeout(() => {
+    if (bgPicker) bgPicker.hidden = true;
+    sheetDismissTimer = null;
+  }, SHEET_TRANSITION_MS);
+  if (restoreFocus && lastFocusedElement && typeof lastFocusedElement.focus === 'function') {
+    lastFocusedElement.focus();
+  }
+}
+
+function handleBackgroundGridClick(event) {
+  const target = event.target instanceof Element ? event.target.closest('[data-bg-option]') : null;
+  if (!target) return;
+  event.preventDefault();
+  const src = target.dataset.bgOption;
+  if (!src) return;
+  setBackground(src, { persist: true });
+  closeBackgroundPicker({ restoreFocus: true });
+}
+
+async function initBackgroundPicker() {
+  if (!settingsBtn || !bgPicker || !bgGrid) return;
+  try {
+    backgroundOptions = await loadBackgroundList();
+  } catch (_) {
+    backgroundOptions = [];
+  }
+
+  if (!Array.isArray(backgroundOptions) || backgroundOptions.length < 2) {
+    settingsBtn.hidden = true;
+    settingsBtn.setAttribute('aria-pressed', 'false');
+    return;
+  }
+
+  settingsBtn.hidden = false;
+  settingsBtn.setAttribute('aria-pressed', 'false');
+  settingsBtn.title = 'Background settings';
+
+  bgGrid.replaceChildren();
+  backgroundOptions.forEach((src, index) => {
+    const thumb = document.createElement('button');
+    thumb.type = 'button';
+    thumb.className = 'bg-thumb';
+    thumb.dataset.bgOption = src;
+    thumb.setAttribute('role', 'listitem');
+    thumb.setAttribute('aria-pressed', currentBackgroundSrc === src ? 'true' : 'false');
+    thumb.title = `Set background ${index + 1}`;
+
+    const img = document.createElement('img');
+    img.src = resolveBackgroundSrc(src);
+    img.alt = `Background ${index + 1}`;
+    img.loading = 'lazy';
+
+    thumb.appendChild(img);
+    if (currentBackgroundSrc === src) {
+      thumb.classList.add('is-selected');
+    }
+    bgGrid.appendChild(thumb);
+  });
+  updateThumbSelection(currentBackgroundSrc);
+
+  settingsBtn.addEventListener('click', openBackgroundPicker);
+  bgGrid.addEventListener('click', handleBackgroundGridClick);
+  const dismissors = bgPicker.querySelectorAll('[data-sheet-dismiss]');
+  dismissors.forEach((btn) => {
+    btn.addEventListener('click', () => closeBackgroundPicker({ restoreFocus: true }));
+  });
 }
 
 // ===== Timer (setInterval so it keeps updating while unfocused) =====
@@ -163,6 +477,13 @@ note.addEventListener('keydown', (e) => {
 
 // Global keys — disabled while editing note or time
 window.addEventListener('keydown', (e) => {
+  if (isSheetOpen()) {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      closeBackgroundPicker({ restoreFocus: true });
+    }
+    return;
+  }
   const editing =
     (document.activeElement === note && note.isContentEditable) ||
     (document.activeElement === timeInput && timeInput.classList.contains('active'));
@@ -173,20 +494,10 @@ window.addEventListener('keydown', (e) => {
   if (e.key.toLowerCase() === 'j') {
     e.preventDefault();
     const nextCompact = !compactMode;
-    if (nextCompact && document.fullscreenElement) {
-      document.exitFullscreen().catch(() => {});
+    if (nextCompact && getFullscreenElement()) {
+      exitFullscreen();
     }
     applyCompactMode(nextCompact);
-    return;
-  }
-  if (e.key.toLowerCase() === 'k') {
-    e.preventDefault();
-    if (document.fullscreenElement) {
-      document.exitFullscreen().catch(() => {});
-    } else {
-      applyCompactMode(false);
-      document.documentElement.requestFullscreen().catch(() => {});
-    }
     return;
   }
   if (e.key.toLowerCase() === 'l') { e.preventDefault(); stopAlarm(); return; }
