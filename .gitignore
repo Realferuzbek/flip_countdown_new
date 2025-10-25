@@ -1,0 +1,9 @@
+node_modules/
+dist/
+out/
+win-unpacked/
+*.AppImage
+*.dmg
+*.exe
+*.zip
+*.blockmap
