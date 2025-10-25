@@ -24,13 +24,13 @@ const bgDiv    = document.querySelector('.bg');
 // ----- Asset loading (works in dev and packaged) -----
 function resolveBundled(relPath) {
   // file:/// URL that works from the current module (asar-safe)
-  // When serving on web, host /renderer/* and /assets/* at the same level.
+  // When serving on web, host /assets/* alongside this script.
   return new URL(relPath, import.meta.url).toString();
 }
 
 function loadBundledAssets() {
   // Background
-  const bgUrl = resolveBundled('../assets/background.jpg');
+  const bgUrl = resolveBundled('./assets/background.jpg');
   bgDiv.style.backgroundImage = `url("${bgUrl}")`;
   bgDiv.style.backgroundSize = 'cover';
   bgDiv.style.backgroundPosition = 'center';
@@ -38,7 +38,7 @@ function loadBundledAssets() {
   bgDiv.style.filter = 'brightness(0.35)';
 
   // Alarm
-  const alarmUrl = resolveBundled('../assets/alarm.mp3');
+  const alarmUrl = resolveBundled('./assets/alarm.mp3');
   alarm.src = alarmUrl;
   alarm.load();
 }

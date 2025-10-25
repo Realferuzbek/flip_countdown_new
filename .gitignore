@@ -1,11 +1,7 @@
 node_modules/
 dist/
-out/
-win-unpacked/
-*.AppImage
-*.dmg
-*.exe
+*.log
 *.zip
-*.blockmap
 *.asar
-flip-src.zip
+*.blockmap
+.DS_Store
