@@ -62,7 +62,6 @@
       "target": ["AppImage"],
       "category": "Utility",
       "icon": "assets/icon.png"
-    },
-    "publish": "never"
+    }
   }
 }
