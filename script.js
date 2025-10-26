@@ -10,35 +10,65 @@ let compactMode = false;
 
 // === Background + Fullscreen wiring ===
 const BG_STORE_KEY = 'bg-url';
+const BG_LEGACY_KEY = 'bg:src';
 const $ = (sel) => document.querySelector(sel);
-
-function applyBackground(url) {
-  if (!url) return;
-  const resolved = typeof resolveBackgroundSrc === 'function' ? resolveBackgroundSrc(url) : url;
-  const cssUrl = typeof resolved === 'string' && resolved.startsWith('url(')
-    ? resolved
-    : `url('${String(resolved).replace(/'/g, "\\'")}')`;
-  if (typeof setBackground === 'function') {
-    setBackground(url, { persist: true });
-  } else {
-    document.body.style.backgroundImage = cssUrl;
-  }
-  document.body.style.backgroundImage = cssUrl;
-  document.body.style.backgroundSize = 'cover';
-  document.body.style.backgroundPosition = 'center';
-  document.body.style.backgroundRepeat = 'no-repeat';
-  document.body.style.backgroundAttachment = 'fixed';
-  try { localStorage.setItem(BG_STORE_KEY, url); } catch (_) {}
-}
 
 function currentBg() {
   try {
     const stored = localStorage.getItem(BG_STORE_KEY);
     if (stored) return stored;
-    const legacy = localStorage.getItem('bg:src');
+    const legacy = localStorage.getItem(BG_LEGACY_KEY);
     if (legacy) return legacy;
   } catch (_) {}
   return '';
+}
+
+let appliedBackground = currentBg();
+
+function resolveBackgroundUrl(src) {
+  if (!src) return '';
+  if (/^(?:https?:|data:|blob:)/i.test(src)) return src;
+  try {
+    return new URL(src, import.meta.url).toString();
+  } catch (_) {
+    return src;
+  }
+}
+
+function applyBackground(url, { persist = true } = {}) {
+  if (!url) return;
+  const resolved = resolveBackgroundUrl(url);
+  if (!resolved) return;
+  const cssValue = `url("${resolved}")`;
+  if (bgDiv) {
+    bgDiv.style.backgroundImage = cssValue;
+    bgDiv.style.backgroundSize = 'cover';
+    bgDiv.style.backgroundPosition = 'center';
+    bgDiv.style.backgroundRepeat = 'no-repeat';
+    bgDiv.style.backgroundAttachment = 'fixed';
+    bgDiv.style.filter = 'brightness(0.35)';
+  }
+  document.body.style.backgroundImage = cssValue;
+  document.body.style.backgroundSize = 'cover';
+  document.body.style.backgroundPosition = 'center';
+  document.body.style.backgroundRepeat = 'no-repeat';
+  document.body.style.backgroundAttachment = 'fixed';
+  appliedBackground = url;
+  if (persist) {
+    try {
+      localStorage.setItem(BG_STORE_KEY, url);
+      localStorage.setItem(BG_LEGACY_KEY, url);
+    } catch (_) {}
+  }
+}
+
+function syncThumbSelection(grid, url) {
+  if (!grid) return;
+  grid.querySelectorAll('.thumb').forEach((btn) => {
+    const isActive = btn.dataset.bgOption === url;
+    btn.classList.toggle('is-active', isActive);
+    btn.setAttribute('aria-pressed', String(isActive));
+  });
 }
 
 // Fullscreen helpers (vendor-safe)
@@ -57,7 +87,14 @@ function exitFs() {
   const method = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
   if (typeof method === 'function') method.call(document);
 }
-function toggleFs() { inFs() ? exitFs() : enterFs(); }
+function toggleFs() {
+  if (inFs()) {
+    exitFs();
+  } else {
+    applyCompactMode(false);
+    enterFs();
+  }
+}
 
 // Open/close bottom sheet
 function openSheet() {
@@ -65,20 +102,28 @@ function openSheet() {
   if (!sheet) return;
   sheet.hidden = false;
   document.body.classList.add('sheet-open');
+  const trigger = $('#fab-bg');
+  trigger?.setAttribute('aria-pressed', 'true');
   const panel = sheet.querySelector('.sheet__panel');
-  panel?.focus();
+  panel?.focus({ preventScroll: true });
 }
 function closeSheet() {
   const sheet = $('#bg-sheet');
   if (!sheet) return;
   sheet.hidden = true;
   document.body.classList.remove('sheet-open');
+  const trigger = $('#fab-bg');
+  trigger?.setAttribute('aria-pressed', 'false');
+  if (trigger && sheet.contains(document.activeElement)) {
+    trigger.focus();
+  }
 }
 
 async function loadImagesManifest() {
   // Accept both {images:[...]} and ["...","..."]
   try {
     const res = await fetch('assets/images.json', { cache: 'no-store' });
+    if (!res.ok) return [];
     const json = await res.json();
     const list = Array.isArray(json) ? json : (Array.isArray(json.images) ? json.images : []);
     return list.filter((p) => /\.(png|jpe?g)$/i.test(p));
@@ -91,6 +136,7 @@ async function initAppearance() {
   const fsBtn = $('#fab-fs');
   const bgBtn = $('#fab-bg');
   const grid  = $('#bg-grid');
+  const sheet = $('#bg-sheet');
 
   // Fullscreen: expose button only if supported (desktop + Android; iOS Safari lacks it)
   if (fsBtn) {
@@ -106,20 +152,20 @@ async function initAppearance() {
     }
   }
 
-  if (!grid || !bgBtn) {
+  const images = await loadImagesManifest();
+  const saved = currentBg();
+  const availableSet = new Set(images);
+  const initial =
+    (saved && availableSet.has(saved)) ? saved :
+    (images[0] || saved || 'assets/background.jpg');
+
+  applyBackground(initial, { persist: Boolean(images.length) });
+
+  if (!grid || !bgBtn || !sheet) {
     return;
   }
 
-  // Backgrounds
-  const images = await loadImagesManifest();
-
-  // Set initial background from storage or first asset (fallback to existing background if none)
-  const saved = currentBg();
-  if (saved) applyBackground(saved);
-  else if (images[0]) applyBackground(images[0]);
-
   if (images.length > 1) {
-    // Build grid
     grid.innerHTML = '';
     images.forEach((url) => {
       const btn = document.createElement('button');
@@ -127,40 +173,44 @@ async function initAppearance() {
       btn.type = 'button';
       btn.dataset.bgOption = url;
       btn.innerHTML = `<img loading="lazy" decoding="async" src="${url}" alt="">`;
-      if (currentBg() === url) {
-        btn.classList.add('is-selected');
-        btn.setAttribute('aria-pressed', 'true');
-      } else {
-        btn.setAttribute('aria-pressed', 'false');
-      }
-      btn.addEventListener('click', () => { applyBackground(url); closeSheet(); });
+      btn.addEventListener('click', () => {
+        applyBackground(url);
+        syncThumbSelection(grid, url);
+        closeSheet();
+      });
       grid.appendChild(btn);
     });
 
-    bgBtn.hidden = false;
-    bgBtn.addEventListener('click', openSheet);
+    syncThumbSelection(grid, appliedBackground);
 
-    const sheet = $('#bg-sheet');
-    sheet?.addEventListener('click', (e) => {
-      if (e.target instanceof Element && e.target.hasAttribute('data-close')) closeSheet();
+    bgBtn.hidden = false;
+    bgBtn.setAttribute('aria-pressed', 'false');
+    bgBtn.addEventListener('click', () => {
+      const sheetVisible = !sheet.hidden;
+      if (sheetVisible) {
+        closeSheet();
+      } else {
+        openSheet();
+      }
+    });
+
+    sheet.addEventListener('click', (e) => {
+      if (e.target instanceof Element && e.target.hasAttribute('data-close')) {
+        closeSheet();
+      }
     });
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && sheet && !sheet.hidden) closeSheet();
+      if (e.key === 'Escape' && !sheet.hidden) {
+        closeSheet();
+      }
     });
   } else {
-    // Only one background: hide settings button
-    bgBtn.remove();
+    closeSheet();
+    grid.innerHTML = '';
+    bgBtn.hidden = true;
+    bgBtn.setAttribute('aria-pressed', 'false');
   }
 }
-
-const DEFAULT_BACKGROUND = './assets/background.jpg';
-const BG_STORAGE_KEY = 'bg:src';
-const SHEET_TRANSITION_MS = 180;
-
-let currentBackgroundSrc = '';
-let backgroundOptions = [];
-let sheetDismissTimer = null;
-let lastFocusedElement = null;
 
 if (!window.electronAPI) window.electronAPI = { setCompactMode: () => {} };
 
@@ -174,24 +224,6 @@ const timeInput= document.getElementById('timeInput');
 const note     = document.getElementById('note');
 const alarm    = document.getElementById('alarm');
 const bgDiv    = document.querySelector('.bg');
-const fullscreenBtn = document.getElementById('btn-fullscreen');
-const settingsBtn = document.getElementById('btn-settings');
-const bgPicker = document.getElementById('bg-picker');
-const bgGrid = document.getElementById('bg-grid');
-const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent || '' : '';
-const isIPhone = /\biPhone\b/i.test(userAgent);
-
-if (settingsBtn) {
-  settingsBtn.title = 'Background settings';
-}
-if (fullscreenBtn) {
-  fullscreenBtn.title = 'Enter fullscreen';
-}
-
-const savedBackgroundOnInit = getSavedBackground();
-if (savedBackgroundOnInit) {
-  setBackground(savedBackgroundOnInit, { persist: false, updateSelection: false });
-}
 
 // ----- Asset loading (works in dev and packaged) -----
 function resolveBundled(relPath) {
@@ -201,27 +233,26 @@ function resolveBundled(relPath) {
 }
 
 function loadBundledAssets() {
-  // Background
-  if (!currentBackgroundSrc) {
-    setBackground(DEFAULT_BACKGROUND, { persist: false, updateSelection: false });
+  if (bgDiv && !bgDiv.style.backgroundImage) {
+    applyBackground('assets/background.jpg', { persist: false });
   }
-  bgDiv.style.filter = 'brightness(0.35)';
 
-  // Alarm
   const alarmUrl = resolveBundled('./assets/alarm.mp3');
   alarm.src = alarmUrl;
   alarm.load();
 }
 
 // ----- Boot / focus -----
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   document.body.tabIndex = -1;
   document.body.focus();
-  initAppearance();
   loadBundledAssets();
-  applySavedBackground();
+  try {
+    await initAppearance();
+  } catch (err) {
+    console.error('Failed to initialize appearance controls:', err);
+  }
   render();
-  initBackgroundPicker().catch(() => {});
 });
 
 // ===== Helpers =====
@@ -251,302 +282,9 @@ function applyCompactMode(compact) {
   }
 }
 
-// ===== Fullscreen =====
-function getFullscreenElement() {
-  return document.fullscreenElement ||
-    document.webkitFullscreenElement ||
-    document.mozFullScreenElement ||
-    document.msFullscreenElement ||
-    null;
-}
-
-function requestFullscreen(el) {
-  if (!el) return;
-  const request =
-    el.requestFullscreen ||
-    el.webkitRequestFullscreen ||
-    el.mozRequestFullScreen ||
-    el.msRequestFullscreen;
-  if (typeof request !== 'function') return;
-  try {
-    const result = request.call(el);
-    if (result && typeof result.then === 'function') {
-      result.catch(() => {});
-    }
-  } catch (_) {}
-}
-
-function exitFullscreen() {
-  const exit =
-    document.exitFullscreen ||
-    document.webkitExitFullscreen ||
-    document.mozCancelFullScreen ||
-    document.msExitFullscreen;
-  if (typeof exit !== 'function') return;
-  try {
-    const result = exit.call(document);
-    if (result && typeof result.then === 'function') {
-      result.catch(() => {});
-    }
-  } catch (_) {}
-}
-
-function isFullscreenSupported() {
-  const el = document.documentElement;
-  if (!el) return false;
-  return Boolean(
-    document.fullscreenEnabled ||
-    document.webkitFullscreenEnabled ||
-    document.mozFullScreenEnabled ||
-    document.msFullscreenEnabled ||
-    el.requestFullscreen ||
-    el.webkitRequestFullscreen ||
-    el.mozRequestFullScreen ||
-    el.msRequestFullscreen
-  );
-}
-
-const fullscreenSupported = isFullscreenSupported();
-
-function updateFullscreenButtonState() {
-  if (!fullscreenBtn) return;
-  const active = Boolean(getFullscreenElement());
-  fullscreenBtn.setAttribute('aria-pressed', active ? 'true' : 'false');
-  fullscreenBtn.setAttribute('aria-label', active ? 'Exit fullscreen' : 'Enter fullscreen');
-  fullscreenBtn.title = active ? 'Exit fullscreen' : 'Enter fullscreen';
-}
-
-function toggleFullscreen() {
-  if (!fullscreenSupported) return;
-  if (getFullscreenElement()) {
-    exitFullscreen();
-  } else {
-    applyCompactMode(false);
-    requestFullscreen(document.documentElement);
-  }
-}
-
-if (fullscreenBtn) {
-  const lacksFullscreenAPI =
-    !(document.documentElement && typeof document.documentElement.requestFullscreen === 'function') &&
-    !document.webkitFullscreenElement;
-  if (isIPhone && lacksFullscreenAPI) {
-    fullscreenBtn.hidden = true;
-  } else if (!fullscreenSupported) {
-    fullscreenBtn.hidden = true;
-  } else {
-    fullscreenBtn.hidden = false;
-    updateFullscreenButtonState();
-    fullscreenBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      toggleFullscreen();
-    });
-    const fullscreenEvents = ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'];
-    fullscreenEvents.forEach((eventName) => {
-      document.addEventListener(eventName, updateFullscreenButtonState);
-    });
-  }
-}
-
-// ===== Background picker =====
-function resolveBackgroundSrc(src) {
-  if (!src) return null;
-  if (/^(?:https?:|data:)/i.test(src) || src.startsWith('/')) return src;
-  const candidate = src.startsWith('.') ? src : `./${src}`;
-  try {
-    return resolveBundled(candidate);
-  } catch (_) {
-    try {
-      return resolveBundled(src);
-    } catch (__) {
-      return src;
-    }
-  }
-}
-
-function getSavedBackground() {
-  try {
-    const stored = localStorage.getItem(BG_STORAGE_KEY);
-    if (stored) return stored;
-    return localStorage.getItem(BG_STORE_KEY) || '';
-  } catch (_) {
-    return '';
-  }
-}
-
-function updateThumbSelection(src) {
-  if (!bgGrid) return;
-  const nodes = bgGrid.querySelectorAll('[data-bg-option]');
-  nodes.forEach((node) => {
-    const isActive = node.dataset.bgOption === src;
-    node.classList.toggle('is-selected', isActive);
-    node.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-  });
-}
-
-function setBackground(src, options = {}) {
-  if (!bgDiv) return;
-  if (!src) return;
-  const { persist = false, updateSelection = true } = options;
-  const resolved = resolveBackgroundSrc(src);
-  if (!resolved) return;
-  const nextImage = `url("${resolved}")`;
-  if (bgDiv.style.backgroundImage !== nextImage) {
-    bgDiv.style.backgroundImage = nextImage;
-    bgDiv.style.backgroundSize = 'cover';
-    bgDiv.style.backgroundPosition = 'center';
-    bgDiv.style.backgroundRepeat = 'no-repeat';
-    bgDiv.style.backgroundAttachment = 'fixed';
-  }
-  document.body.style.backgroundImage = nextImage;
-  document.body.style.backgroundSize = 'cover';
-  document.body.style.backgroundPosition = 'center';
-  document.body.style.backgroundRepeat = 'no-repeat';
-  document.body.style.backgroundAttachment = 'fixed';
-  currentBackgroundSrc = src;
-  if (persist) {
-    try {
-      localStorage.setItem(BG_STORAGE_KEY, src);
-      localStorage.setItem(BG_STORE_KEY, src);
-    } catch (_) {}
-  }
-  if (updateSelection) updateThumbSelection(src);
-}
-
-function applySavedBackground() {
-  const saved = getSavedBackground();
-  if (saved) {
-    setBackground(saved, { persist: false });
-  }
-}
-
-async function loadBackgroundList() {
-  try {
-    const response = await fetch('assets/images.json', { cache: 'no-store' });
-    if (!response.ok) return [];
-    const payload = await response.json();
-    if (!Array.isArray(payload)) return [];
-    const seen = new Set();
-    const filtered = [];
-    payload.forEach((entry) => {
-      if (typeof entry !== 'string') return;
-      const trimmed = entry.trim();
-      if (!trimmed) return;
-      if (!/\.(png|jpe?g)$/i.test(trimmed)) return;
-      if (seen.has(trimmed)) return;
-      seen.add(trimmed);
-      filtered.push(trimmed);
-    });
-    return filtered;
-  } catch (_) {
-    return [];
-  }
-}
-
 function isSheetOpen() {
-  if (bgPicker && !bgPicker.hidden && bgPicker.classList.contains('is-active')) return true;
   const sheet = document.getElementById('bg-sheet');
-  if (sheet && !sheet.hidden) return true;
-  return false;
-}
-
-function openBackgroundPicker() {
-  if (!bgPicker || isSheetOpen()) return;
-  if (sheetDismissTimer) {
-    clearTimeout(sheetDismissTimer);
-    sheetDismissTimer = null;
-  }
-  lastFocusedElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-  bgPicker.hidden = false;
-  document.body.classList.add('sheet-open');
-  requestAnimationFrame(() => {
-    if (!bgPicker) return;
-    bgPicker.classList.add('is-active');
-    if (settingsBtn) settingsBtn.setAttribute('aria-pressed', 'true');
-    if (bgGrid) {
-      const target = bgGrid.querySelector('.bg-thumb.is-selected') || bgGrid.querySelector('.bg-thumb');
-      if (target && typeof target.focus === 'function') {
-        target.focus({ preventScroll: true });
-      }
-    }
-  });
-}
-
-function closeBackgroundPicker({ restoreFocus = true } = {}) {
-  if (!bgPicker || bgPicker.hidden) return;
-  bgPicker.classList.remove('is-active');
-  document.body.classList.remove('sheet-open');
-  if (settingsBtn) settingsBtn.setAttribute('aria-pressed', 'false');
-  if (sheetDismissTimer) {
-    clearTimeout(sheetDismissTimer);
-    sheetDismissTimer = null;
-  }
-  sheetDismissTimer = setTimeout(() => {
-    if (bgPicker) bgPicker.hidden = true;
-    sheetDismissTimer = null;
-  }, SHEET_TRANSITION_MS);
-  if (restoreFocus && lastFocusedElement && typeof lastFocusedElement.focus === 'function') {
-    lastFocusedElement.focus();
-  }
-}
-
-function handleBackgroundGridClick(event) {
-  const target = event.target instanceof Element ? event.target.closest('[data-bg-option]') : null;
-  if (!target) return;
-  event.preventDefault();
-  const src = target.dataset.bgOption;
-  if (!src) return;
-  setBackground(src, { persist: true });
-  closeBackgroundPicker({ restoreFocus: true });
-}
-
-async function initBackgroundPicker() {
-  if (!settingsBtn || !bgPicker || !bgGrid) return;
-  try {
-    backgroundOptions = await loadBackgroundList();
-  } catch (_) {
-    backgroundOptions = [];
-  }
-
-  if (!Array.isArray(backgroundOptions) || backgroundOptions.length < 2) {
-    settingsBtn.hidden = true;
-    settingsBtn.setAttribute('aria-pressed', 'false');
-    return;
-  }
-
-  settingsBtn.hidden = false;
-  settingsBtn.setAttribute('aria-pressed', 'false');
-  settingsBtn.title = 'Background settings';
-
-  bgGrid.replaceChildren();
-  backgroundOptions.forEach((src, index) => {
-    const thumb = document.createElement('button');
-    thumb.type = 'button';
-    thumb.className = 'bg-thumb';
-    thumb.dataset.bgOption = src;
-    thumb.setAttribute('role', 'listitem');
-    thumb.setAttribute('aria-pressed', currentBackgroundSrc === src ? 'true' : 'false');
-    thumb.title = `Set background ${index + 1}`;
-
-    const img = document.createElement('img');
-    img.src = resolveBackgroundSrc(src);
-    img.alt = `Background ${index + 1}`;
-    img.loading = 'lazy';
-
-    thumb.appendChild(img);
-    if (currentBackgroundSrc === src) {
-      thumb.classList.add('is-selected');
-    }
-    bgGrid.appendChild(thumb);
-  });
-  updateThumbSelection(currentBackgroundSrc);
-
-  settingsBtn.addEventListener('click', openBackgroundPicker);
-  bgGrid.addEventListener('click', handleBackgroundGridClick);
-  const dismissors = bgPicker.querySelectorAll('[data-sheet-dismiss]');
-  dismissors.forEach((btn) => {
-    btn.addEventListener('click', () => closeBackgroundPicker({ restoreFocus: true }));
-  });
+  return Boolean(sheet && !sheet.hidden);
 }
 
 // ===== Timer (setInterval so it keeps updating while unfocused) =====
@@ -637,7 +375,7 @@ window.addEventListener('keydown', (e) => {
   if (isSheetOpen()) {
     if (e.key === 'Escape') {
       e.preventDefault();
-      closeBackgroundPicker({ restoreFocus: true });
+      closeSheet();
     }
     return;
   }
@@ -651,8 +389,8 @@ window.addEventListener('keydown', (e) => {
   if (e.key.toLowerCase() === 'j') {
     e.preventDefault();
     const nextCompact = !compactMode;
-    if (nextCompact && getFullscreenElement()) {
-      exitFullscreen();
+    if (nextCompact && inFs()) {
+      exitFs();
     }
     applyCompactMode(nextCompact);
     return;
