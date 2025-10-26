@@ -1,4 +1,8 @@
-[
-  "assets/background.jpg",
-  "assets/icon.png"
-]
+{
+  "images": [
+    "assets/background_2.png",
+    "assets/background_3.jpg",
+    "assets/background.jpg",
+    "assets/icon.png"
+  ]
+}

@@ -8,6 +8,151 @@ let timer = null;           // setInterval handle
 let alarmPlaying = false;
 let compactMode = false;
 
+// === Background + Fullscreen wiring ===
+const BG_STORE_KEY = 'bg-url';
+const $ = (sel) => document.querySelector(sel);
+
+function applyBackground(url) {
+  if (!url) return;
+  const resolved = typeof resolveBackgroundSrc === 'function' ? resolveBackgroundSrc(url) : url;
+  const cssUrl = typeof resolved === 'string' && resolved.startsWith('url(')
+    ? resolved
+    : `url('${String(resolved).replace(/'/g, "\\'")}')`;
+  if (typeof setBackground === 'function') {
+    setBackground(url, { persist: true });
+  } else {
+    document.body.style.backgroundImage = cssUrl;
+  }
+  document.body.style.backgroundImage = cssUrl;
+  document.body.style.backgroundSize = 'cover';
+  document.body.style.backgroundPosition = 'center';
+  document.body.style.backgroundRepeat = 'no-repeat';
+  document.body.style.backgroundAttachment = 'fixed';
+  try { localStorage.setItem(BG_STORE_KEY, url); } catch (_) {}
+}
+
+function currentBg() {
+  try {
+    const stored = localStorage.getItem(BG_STORE_KEY);
+    if (stored) return stored;
+    const legacy = localStorage.getItem('bg:src');
+    if (legacy) return legacy;
+  } catch (_) {}
+  return '';
+}
+
+// Fullscreen helpers (vendor-safe)
+function fsSupported() {
+  return Boolean(document.fullscreenEnabled || document.webkitFullscreenEnabled || document.msFullscreenEnabled);
+}
+function inFs() {
+  return Boolean(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
+}
+function enterFs() {
+  const el = document.documentElement;
+  const method = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
+  if (typeof method === 'function') method.call(el);
+}
+function exitFs() {
+  const method = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
+  if (typeof method === 'function') method.call(document);
+}
+function toggleFs() { inFs() ? exitFs() : enterFs(); }
+
+// Open/close bottom sheet
+function openSheet() {
+  const sheet = $('#bg-sheet');
+  if (!sheet) return;
+  sheet.hidden = false;
+  document.body.classList.add('sheet-open');
+  const panel = sheet.querySelector('.sheet__panel');
+  panel?.focus();
+}
+function closeSheet() {
+  const sheet = $('#bg-sheet');
+  if (!sheet) return;
+  sheet.hidden = true;
+  document.body.classList.remove('sheet-open');
+}
+
+async function loadImagesManifest() {
+  // Accept both {images:[...]} and ["...","..."]
+  try {
+    const res = await fetch('assets/images.json', { cache: 'no-store' });
+    const json = await res.json();
+    const list = Array.isArray(json) ? json : (Array.isArray(json.images) ? json.images : []);
+    return list.filter((p) => /\.(png|jpe?g)$/i.test(p));
+  } catch (_) {
+    return []; // no manifest, no picker
+  }
+}
+
+async function initAppearance() {
+  const fsBtn = $('#fab-fs');
+  const bgBtn = $('#fab-bg');
+  const grid  = $('#bg-grid');
+
+  // Fullscreen: expose button only if supported (desktop + Android; iOS Safari lacks it)
+  if (fsBtn) {
+    if (fsSupported()) {
+      fsBtn.hidden = false;
+      fsBtn.setAttribute('aria-pressed', String(inFs()));
+      fsBtn.addEventListener('click', toggleFs);
+      document.addEventListener('fullscreenchange', () => {
+        fsBtn.setAttribute('aria-pressed', String(inFs()));
+      });
+    } else {
+      fsBtn.remove();
+    }
+  }
+
+  if (!grid || !bgBtn) {
+    return;
+  }
+
+  // Backgrounds
+  const images = await loadImagesManifest();
+
+  // Set initial background from storage or first asset (fallback to existing background if none)
+  const saved = currentBg();
+  if (saved) applyBackground(saved);
+  else if (images[0]) applyBackground(images[0]);
+
+  if (images.length > 1) {
+    // Build grid
+    grid.innerHTML = '';
+    images.forEach((url) => {
+      const btn = document.createElement('button');
+      btn.className = 'thumb';
+      btn.type = 'button';
+      btn.dataset.bgOption = url;
+      btn.innerHTML = `<img loading="lazy" decoding="async" src="${url}" alt="">`;
+      if (currentBg() === url) {
+        btn.classList.add('is-selected');
+        btn.setAttribute('aria-pressed', 'true');
+      } else {
+        btn.setAttribute('aria-pressed', 'false');
+      }
+      btn.addEventListener('click', () => { applyBackground(url); closeSheet(); });
+      grid.appendChild(btn);
+    });
+
+    bgBtn.hidden = false;
+    bgBtn.addEventListener('click', openSheet);
+
+    const sheet = $('#bg-sheet');
+    sheet?.addEventListener('click', (e) => {
+      if (e.target instanceof Element && e.target.hasAttribute('data-close')) closeSheet();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && sheet && !sheet.hidden) closeSheet();
+    });
+  } else {
+    // Only one background: hide settings button
+    bgBtn.remove();
+  }
+}
+
 const DEFAULT_BACKGROUND = './assets/background.jpg';
 const BG_STORAGE_KEY = 'bg:src';
 const SHEET_TRANSITION_MS = 180;
@@ -72,6 +217,7 @@ function loadBundledAssets() {
 document.addEventListener('DOMContentLoaded', () => {
   document.body.tabIndex = -1;
   document.body.focus();
+  initAppearance();
   loadBundledAssets();
   applySavedBackground();
   render();
@@ -220,7 +366,9 @@ function resolveBackgroundSrc(src) {
 
 function getSavedBackground() {
   try {
-    return localStorage.getItem(BG_STORAGE_KEY) || '';
+    const stored = localStorage.getItem(BG_STORAGE_KEY);
+    if (stored) return stored;
+    return localStorage.getItem(BG_STORE_KEY) || '';
   } catch (_) {
     return '';
   }
@@ -250,10 +398,16 @@ function setBackground(src, options = {}) {
     bgDiv.style.backgroundRepeat = 'no-repeat';
     bgDiv.style.backgroundAttachment = 'fixed';
   }
+  document.body.style.backgroundImage = nextImage;
+  document.body.style.backgroundSize = 'cover';
+  document.body.style.backgroundPosition = 'center';
+  document.body.style.backgroundRepeat = 'no-repeat';
+  document.body.style.backgroundAttachment = 'fixed';
   currentBackgroundSrc = src;
   if (persist) {
     try {
       localStorage.setItem(BG_STORAGE_KEY, src);
+      localStorage.setItem(BG_STORE_KEY, src);
     } catch (_) {}
   }
   if (updateSelection) updateThumbSelection(src);
@@ -290,7 +444,10 @@ async function loadBackgroundList() {
 }
 
 function isSheetOpen() {
-  return Boolean(bgPicker && !bgPicker.hidden && bgPicker.classList.contains('is-active'));
+  if (bgPicker && !bgPicker.hidden && bgPicker.classList.contains('is-active')) return true;
+  const sheet = document.getElementById('bg-sheet');
+  if (sheet && !sheet.hidden) return true;
+  return false;
 }
 
 function openBackgroundPicker() {

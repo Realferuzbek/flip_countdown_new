@@ -1,55 +1,21 @@
-#!/usr/bin/env node
+// Scan /assets for .png/.jpg and write assets/images.json (sorted)
+import { readdir, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
 
-import { promises as fs } from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+const ASSETS = 'assets';
+const OUT = join(ASSETS, 'images.json');
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const rootDir = path.resolve(__dirname, '..');
-const assetsDir = path.resolve(rootDir, 'assets');
-const manifestPath = path.resolve(assetsDir, 'images.json');
+try {
+  const files = await readdir(ASSETS);
+  const imgs = files
+    .filter(f => /\.(png|jpe?g)$/i.test(f))
+    .sort((a, b) => a.localeCompare(b))
+    .map(f => `${ASSETS}/${f}`);
 
-const VALID_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg']);
-
-async function ensureAssetsDir() {
-  try {
-    const stats = await fs.stat(assetsDir);
-    if (!stats.isDirectory()) {
-      throw new Error(`Expected directory at ${assetsDir}`);
-    }
-  } catch (error) {
-    throw new Error(`Unable to access assets directory: ${error.message}`);
-  }
-}
-
-async function collectImages() {
-  const entries = await fs.readdir(assetsDir, { withFileTypes: true });
-  const images = [];
-
-  for (const entry of entries) {
-    if (!entry.isFile()) continue;
-    const ext = path.extname(entry.name).toLowerCase();
-    if (!VALID_EXTENSIONS.has(ext)) continue;
-    images.push(`assets/${entry.name}`);
-  }
-
-  return images.sort((a, b) => a.localeCompare(b, 'en'));
-}
-
-async function writeManifest(images) {
-  const payload = `${JSON.stringify(images, null, 2)}\n`;
-  await fs.writeFile(manifestPath, payload, 'utf8');
-}
-
-async function main() {
-  await ensureAssetsDir();
-  const images = await collectImages();
-  await writeManifest(images);
-  console.log(`Wrote ${images.length} background ${images.length === 1 ? 'image' : 'images'} to ${path.relative(rootDir, manifestPath)}`);
-}
-
-main().catch((error) => {
-  console.error('Failed to generate images manifest:', error);
+  await writeFile(OUT, JSON.stringify({ images: imgs }, null, 2));
+  console.log(`Wrote ${OUT} with ${imgs.length} image(s).`);
+} catch (err) {
+  console.error('Failed to build manifest:', err);
   process.exitCode = 1;
-});
+}
 
