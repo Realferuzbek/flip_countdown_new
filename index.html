@@ -11,6 +11,12 @@
     <div class="bg"></div>
 
     <div class="content">
+      <div class="mode-toggle" role="group" aria-label="Timer modes">
+        <button class="mode-btn is-active" type="button" data-mode="pomodoro">pomodoro</button>
+        <button class="mode-btn" type="button" data-mode="short">short break</button>
+        <button class="mode-btn" type="button" data-mode="long">long break</button>
+      </div>
+
       <div class="time-wrap" id="timeWrap" title="Click to set time (MM:SS). Press Enter to apply.">
         <div class="flip mm-tens" data-digit="0"></div>
         <div class="flip mm-ones" data-digit="0"></div>
@@ -22,43 +28,50 @@
       <input id="timeInput" class="time-input" maxlength="5" placeholder="MM:SS" aria-label="Set time MM:SS" />
 
       <div class="hint" aria-hidden="true"></div>
+
+      <div class="controls" role="group" aria-label="Timer controls">
+        <button id="startBtn" class="control-btn control-btn--primary" type="button">start</button>
+        <button id="resetBtn" class="control-btn control-btn--icon" type="button" aria-label="Restart timer" title="Restart timer">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4.5 6v5h5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M19.5 18a7.5 7.5 0 1 1-1.8-9.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M19.5 6H14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M17.8 4.4 19.5 6 17.8 7.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <button id="fab-bg" class="control-btn control-btn--icon" type="button" aria-label="Backgrounds" title="Backgrounds" hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="5.2" />
+              <circle cx="12" cy="12" r="2.6" />
+              <line x1="12" y1="3" x2="12" y2="5.2" />
+              <line x1="12" y1="18.8" x2="12" y2="21" />
+              <line x1="3" y1="12" x2="5.2" y2="12" />
+              <line x1="18.8" y1="12" x2="21" y2="12" />
+              <line x1="6.6" y1="6.6" x2="8.1" y2="8.1" />
+              <line x1="15.9" y1="15.9" x2="17.4" y2="17.4" />
+              <line x1="15.9" y1="8.1" x2="17.4" y2="6.6" />
+              <line x1="6.6" y1="17.4" x2="8.1" y2="15.9" />
+            </g>
+          </svg>
+        </button>
+      </div>
     </div>
 
     <!-- audio src set from JS -->
     <audio id="alarm" preload="auto"></audio>
   </div>
 
-  <!-- Floating actions: Backgrounds & Fullscreen -->
+  <!-- Floating action: Fullscreen -->
   <div class="fab-wrap" aria-live="polite">
-    <button id="fab-bg" class="fab" type="button" aria-label="Backgrounds" title="Backgrounds" hidden>
-      <!-- luminous gear icon -->
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="5.2" />
-          <circle cx="12" cy="12" r="2.6" />
-          <line x1="12" y1="3" x2="12" y2="5.2" />
-          <line x1="12" y1="18.8" x2="12" y2="21" />
-          <line x1="3" y1="12" x2="5.2" y2="12" />
-          <line x1="18.8" y1="12" x2="21" y2="12" />
-          <line x1="6.6" y1="6.6" x2="8.1" y2="8.1" />
-          <line x1="15.9" y1="15.9" x2="17.4" y2="17.4" />
-          <line x1="15.9" y1="8.1" x2="17.4" y2="6.6" />
-          <line x1="6.6" y1="17.4" x2="8.1" y2="15.9" />
-        </g>
-      </svg>
-    </button>
     <button id="fab-fs" class="fab" type="button" aria-label="Fullscreen" title="Fullscreen" hidden>
       <!-- radiant fullscreen icon -->
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M9 4.5H5.5V9" />
-          <path d="M15 4.5h3.5V9" />
-          <path d="M5.5 15v3.5H9" />
-          <path d="M18.5 15v3.5H15" />
-          <path d="M9.6 9.6 5.5 5.5" />
-          <path d="M14.4 9.6 18.5 5.5" />
-          <path d="M9.6 14.4 5.5 18.5" />
-          <path d="M14.4 14.4 18.5 18.5" />
+          <path d="M8 5.5H5.5V8" />
+          <path d="M16 5.5h2.5V8" />
+          <path d="M5.5 16v2.5H8" />
+          <path d="M18.5 16v2.5H16" />
         </g>
       </svg>
     </button>

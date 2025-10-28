@@ -3,10 +3,16 @@
 // =======================
 
 // ----- State -----
+const MODE_CONFIG = {
+  pomodoro: { label: 'pomodoro', seconds: 25 * 60 },
+  short: { label: 'short break', seconds: 5 * 60 },
+  long: { label: 'long break', seconds: 15 * 60 },
+};
 let totalSeconds = 0;
 let timer = null;           // setInterval handle
 let alarmPlaying = false;
 let compactMode = false;
+let activeMode = 'pomodoro';
 
 // === Background + Fullscreen wiring ===
 const BG_STORE_KEY = 'bg-url';
@@ -25,6 +31,10 @@ function currentBg() {
 }
 
 let appliedBackground = currentBg();
+
+const modeButtons = Array.from(document.querySelectorAll('.mode-btn'));
+const startBtn = document.getElementById('startBtn');
+const resetBtn = document.getElementById('resetBtn');
 
 function resolveBackgroundUrl(src) {
   if (!src) return '';
@@ -70,6 +80,45 @@ function syncThumbSelection(grid, url) {
     btn.classList.toggle('is-active', isActive);
     btn.setAttribute('aria-pressed', String(isActive));
   });
+}
+
+function syncModeButtons(mode = activeMode) {
+  modeButtons.forEach((btn) => {
+    const isActive = btn.dataset.mode === mode;
+    btn.classList.toggle('is-active', isActive);
+    btn.setAttribute('aria-pressed', String(isActive));
+  });
+}
+
+function refreshControls() {
+  if (startBtn) {
+    const running = Boolean(timer);
+    startBtn.textContent = running ? 'pause' : 'start';
+    startBtn.classList.toggle('is-running', running);
+    startBtn.setAttribute('aria-pressed', running ? 'true' : 'false');
+    startBtn.disabled = (!running && totalSeconds <= 0);
+  }
+  if (resetBtn) {
+    const preset = MODE_CONFIG[activeMode]?.seconds ?? 0;
+    const running = Boolean(timer);
+    resetBtn.disabled = !running && totalSeconds === preset;
+  }
+  syncModeButtons();
+}
+
+function setActiveMode(mode, { resetToPreset = true } = {}) {
+  if (!MODE_CONFIG[mode]) {
+    mode = 'pomodoro';
+  }
+  activeMode = mode;
+  syncModeButtons(mode);
+  if (resetToPreset) {
+    pause({ refresh: false });
+    stopAlarm(true);
+    totalSeconds = MODE_CONFIG[mode].seconds;
+    render();
+  }
+  refreshControls();
 }
 
 // Fullscreen helpers (vendor-safe)
@@ -242,10 +291,40 @@ function loadBundledAssets() {
   alarm.load();
 }
 
+function initModeControls() {
+  if (modeButtons.length) {
+    modeButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const targetMode = btn.dataset.mode;
+        setActiveMode(targetMode, { resetToPreset: true });
+      });
+    });
+  }
+
+  if (startBtn) {
+    startBtn.addEventListener('click', () => {
+      if (timer) {
+        pause();
+      } else {
+        start();
+      }
+    });
+  }
+
+  if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+      reset();
+    });
+  }
+
+  setActiveMode(activeMode, { resetToPreset: true });
+}
+
 // ----- Boot / focus -----
 document.addEventListener('DOMContentLoaded', async () => {
   document.body.tabIndex = -1;
   document.body.focus();
+  initModeControls();
   loadBundledAssets();
   try {
     await initAppearance();
@@ -253,6 +332,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.error('Failed to initialize appearance controls:', err);
   }
   render();
+  refreshControls();
 });
 
 // ===== Helpers =====
@@ -289,28 +369,37 @@ function isSheetOpen() {
 
 // ===== Timer (setInterval so it keeps updating while unfocused) =====
 function start() {
-  if (totalSeconds <= 0 || timer) return;
+  if (totalSeconds <= 0 || timer) {
+    refreshControls();
+    return;
+  }
   timer = setInterval(tick, 1000);
+  refreshControls();
 }
-function pause() {
+function pause(options = {}) {
+  const { refresh = true } = options;
   if (timer) {
     clearInterval(timer);
     timer = null;
   }
+  if (refresh) refreshControls();
 }
 function reset() {
-  pause();
+  pause({ refresh: false });
   stopAlarm(true);
-  totalSeconds = 0;
+  const preset = MODE_CONFIG[activeMode]?.seconds ?? 0;
+  totalSeconds = preset;
   render();
+  refreshControls();
 }
 function tick() {
   totalSeconds = Math.max(0, totalSeconds - 1);
   render();
   if (totalSeconds <= 0) {
-    pause();
+    pause({ refresh: false });
     playAlarm();
   }
+  refreshControls();
 }
 
 // ===== Alarm =====
@@ -341,8 +430,10 @@ function applyTimeFromInput() {
   const v = (timeInput.value || '').trim();
   const m = /^([0-5]?\d):([0-5]?\d)$/.exec(v);
   if (m) {
+    pause({ refresh: false });
     totalSeconds = clampTime(parseInt(m[1],10), parseInt(m[2],10));
     render();
+    refreshControls();
   }
   timeInput.classList.remove('active');
 }
