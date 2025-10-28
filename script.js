@@ -221,7 +221,6 @@ const ssTens   = document.querySelector('.ss-tens');
 const ssOnes   = document.querySelector('.ss-ones');
 const timeWrap = document.getElementById('timeWrap');
 const timeInput= document.getElementById('timeInput');
-const note     = document.getElementById('note');
 const alarm    = document.getElementById('alarm');
 const bgDiv    = document.querySelector('.bg');
 
@@ -331,7 +330,6 @@ function stopAlarm(force = false) {
 
 // ===== Time input =====
 function openTimeInput() {
-  if (document.activeElement === note && note.isContentEditable) return;
   const [a,b,c,d] = formatMMSS(totalSeconds || 0);
   timeInput.value = `${a}${b}:${c}${d}`;
   timeInput.classList.add('active');
@@ -348,14 +346,6 @@ function applyTimeFromInput() {
   timeInput.classList.remove('active');
 }
 
-// ===== Note editing =====
-function enableNoteEdit() { note.contentEditable = 'true'; note.focus(); placeCaretAtEnd(note); }
-function lockNote() { note.contentEditable = 'false'; }
-function placeCaretAtEnd(el) {
-  const r = document.createRange(); r.selectNodeContents(el); r.collapse(false);
-  const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
-}
-
 // ===== Events =====
 timeWrap.addEventListener('click', openTimeInput);
 
@@ -364,13 +354,7 @@ timeInput.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') { e.preventDefault(); timeInput.classList.remove('active'); }
 });
 
-note.addEventListener('click', enableNoteEdit);
-note.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter')  { e.preventDefault(); lockNote(); }
-  if (e.key === 'Escape') { e.preventDefault(); lockNote(); } // don't reset while typing
-});
-
-// Global keys — disabled while editing note or time
+// Global keys — disabled while editing time input
 window.addEventListener('keydown', (e) => {
   if (isSheetOpen()) {
     if (e.key === 'Escape') {
@@ -380,7 +364,6 @@ window.addEventListener('keydown', (e) => {
     return;
   }
   const editing =
-    (document.activeElement === note && note.isContentEditable) ||
     (document.activeElement === timeInput && timeInput.classList.contains('active'));
   if (editing) return;
 
