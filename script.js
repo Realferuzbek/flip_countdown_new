@@ -11,6 +11,7 @@ let compactMode = false;
 // === Background + Fullscreen wiring ===
 const BG_STORE_KEY = 'bg-url';
 const BG_LEGACY_KEY = 'bg:src';
+const DEFAULT_BG = 'assets/backgrounds/background_2.png';
 const $ = (sel) => document.querySelector(sel);
 
 function currentBg() {
@@ -157,7 +158,7 @@ async function initAppearance() {
   const availableSet = new Set(images);
   const initial =
     (saved && availableSet.has(saved)) ? saved :
-    (images[0] || saved || 'assets/background.jpg');
+    (images[0] || saved || DEFAULT_BG);
 
   applyBackground(initial, { persist: Boolean(images.length) });
 
@@ -233,7 +234,7 @@ function resolveBundled(relPath) {
 
 function loadBundledAssets() {
   if (bgDiv && !bgDiv.style.backgroundImage) {
-    applyBackground('assets/background.jpg', { persist: false });
+    applyBackground(DEFAULT_BG, { persist: false });
   }
 
   const alarmUrl = resolveBundled('./assets/alarm.mp3');
