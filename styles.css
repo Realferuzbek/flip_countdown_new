@@ -603,30 +603,58 @@ body.sheet-open { overflow: hidden; }
 
 /* Settings button — give the gear a premium glassy halo */
 #fab-bg.control-btn--icon{
+  position: relative;
   color:#fff;
-  border: 1.4px solid rgba(255,255,255,.42);
-  background:
-    radial-gradient(circle at 30% 28%, rgba(255,255,255,.22) 0%, rgba(255,255,255,.08) 38%, transparent 60%),
-    rgba(12,12,14,.58);
-  backdrop-filter: blur(8px) saturate(135%);
-  -webkit-backdrop-filter: blur(8px) saturate(135%);
+  border: 1.6px solid rgba(255,255,255,.54);
+  background: rgba(18,18,22,.58);
+  backdrop-filter: blur(10px) saturate(140%);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
   box-shadow:
-    0 16px 32px rgba(0,0,0,.34),
-    inset 0 0 0 1px rgba(255,255,255,.12);
+    0 18px 36px rgba(0,0,0,.38),
+    inset 0 0 0 1px rgba(255,255,255,.14);
+  overflow: hidden;
+}
+#fab-bg.control-btn--icon::before,
+#fab-bg.control-btn--icon::after{
+  content:"";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  transition: opacity .28s ease, transform .28s ease;
+}
+#fab-bg.control-btn--icon::before{
+  inset: 2px;
+  background: linear-gradient(135deg, rgba(255,255,255,.35) 0%, rgba(255,255,255,.05) 45%, rgba(0,0,0,0) 65%);
+  opacity: .85;
+}
+#fab-bg.control-btn--icon::after{
+  background:
+    radial-gradient(circle at 35% 28%, rgba(255,255,255,.4) 0%, rgba(255,255,255,.12) 38%, rgba(0,0,0,.2) 72%, rgba(0,0,0,.65) 100%);
+  opacity: .55;
 }
 #fab-bg.control-btn--icon svg{
-  width:60%;
-  height:60%;
+  width:64%;
+  height:64%;
   display:block;
+  position: relative;
+  z-index: 1;
 }
 #fab-bg.control-btn--icon:hover:not(:disabled),
 #fab-bg.control-btn--icon:focus-visible:not(:disabled){
-  border-color: rgba(255,255,255,.88);
-  background:
-    radial-gradient(circle at 30% 28%, rgba(255,255,255,.30) 0%, rgba(255,255,255,.12) 42%, transparent 62%),
-    rgba(32,32,36,.52);
+  border-color: rgba(255,255,255,.92);
+  background: rgba(30,32,38,.54);
   box-shadow:
-    0 20px 36px rgba(0,0,0,.38),
-    inset 0 0 0 1px rgba(255,255,255,.18);
+    0 24px 40px rgba(0,0,0,.44),
+    inset 0 0 0 1px rgba(255,255,255,.2);
   outline: none;
+}
+#fab-bg.control-btn--icon:hover:not(:disabled)::before,
+#fab-bg.control-btn--icon:focus-visible:not(:disabled)::before{
+  opacity: .95;
+}
+#fab-bg.control-btn--icon:hover:not(:disabled)::after,
+#fab-bg.control-btn--icon:focus-visible:not(:disabled)::after{
+  opacity: .7;
+  transform: scale(1.05);
 }
