@@ -254,3 +254,275 @@ body.sheet-open { overflow: hidden; }
   .bg { transition: filter 180ms ease; }
   .time-input { transition: opacity 120ms ease; }
 }
+
+/* Guardrail overrides */
+.mode-toggle {
+  gap: clamp(12px, 2.2vw, 22px);
+  margin-bottom: clamp(8px, 2vh, 18px);
+}
+
+.mode-btn {
+  border: 1.5px solid rgba(255,255,255,0.55);
+  border-radius: 999px;
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(6px) saturate(110%);
+  -webkit-backdrop-filter: blur(6px) saturate(110%);
+  color: rgba(255,255,255,0.9);
+  padding: clamp(10px, 1.8vw, 16px) clamp(24px, 5vw, 40px);
+  font-size: clamp(14px, 1.6vw, 18px);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: lowercase;
+  cursor: pointer;
+  transition: background .18s ease, color .18s ease, border .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+
+.mode-btn:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255,255,255,0.85);
+  background: rgba(255,255,255,0.14);
+  color: #fff;
+}
+
+.mode-btn:focus-visible {
+  outline: 2px solid rgba(255,255,255,0.8);
+  outline-offset: 3px;
+}
+
+.mode-btn.is-active {
+  background: rgba(255,255,255,0.96);
+  color: #1c1c1c;
+  border-color: transparent;
+  box-shadow: 0 14px 28px rgba(0,0,0,0.22);
+  transform: translateY(-1px);
+}
+
+.mode-btn.is-active:hover {
+  color: #1c1c1c;
+  transform: translateY(-1px);
+}
+
+.time-wrap {
+  gap: clamp(10px, 3vw, 20px);
+}
+
+.flip::before,
+.flip::after {
+  font-size: clamp(56px, 17vw, 190px);
+  font-weight: 800;
+}
+
+.colon {
+  width: clamp(28px, 7vw, 88px);
+  font-size: clamp(48px, 15vw, 176px);
+}
+
+.control-btn--primary {
+  padding: clamp(12px, 2.0vw, 18px) clamp(40px, 6.8vw, 64px);
+  background: rgba(255,255,255,0.92);
+  color: #161616;
+  box-shadow: 0 18px 36px rgba(0,0,0,0.28);
+}
+
+.control-btn--icon {
+  width: clamp(52px, 8vw, 58px);
+  height: clamp(52px, 8vw, 58px);
+  border-radius: 50%;
+  background: rgba(0,0,0,0.55);
+  border: 1.5px solid rgba(255,255,255,0.40);
+  box-shadow: 0 14px 28px rgba(0,0,0,0.26);
+  color: #fff;
+}
+
+.control-btn--icon:hover:not(:disabled),
+.control-btn--icon:focus-visible:not(:disabled) {
+  border-color: rgba(255,255,255,0.75);
+  background: rgba(255,255,255,0.10);
+}
+
+@media (max-width: 560px) {
+  .mode-toggle {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .mode-btn {
+    flex: 1 1 calc(50% - 12px);
+    min-width: 140px;
+  }
+  .controls {
+    gap: 14px;
+  }
+  .control-btn--primary {
+    padding: 12px 34px;
+  }
+}
+
+/* ===================== Responsive Tokens & Baseline ===================== */
+:root{
+  /* spacing */
+  --space-1: clamp(4px, .6vw, 8px);
+  --space-2: clamp(8px, 1.2vw, 14px);
+  --space-3: clamp(12px, 1.8vw, 20px);
+  --space-4: clamp(16px, 2.4vw, 28px);
+
+  /* pills + buttons */
+  --pill-pad-y: clamp(10px, 1.4vw, 16px);
+  --pill-pad-x: clamp(22px, 4.6vw, 42px);
+  --pill-radius: 999px;
+  --icon-diam: clamp(48px, 7.2vw, 60px);        /* reset + settings gear */
+  --primary-pad-y: clamp(12px, 2.0vw, 18px);
+  --primary-pad-x: clamp(36px, 6.4vw, 64px);
+  --ring: 1.5px solid rgba(255,255,255,.45);
+
+  /* glass */
+  --glass-bg: rgba(255,255,255,.08);
+  --glass-bg-hover: rgba(255,255,255,.14);
+  --glass-border: rgba(255,255,255,.55);
+
+  /* typography scale */
+  --digit-min: 56px;
+  --digit-fluid: 16vmin;                        /* scales to short viewports too */
+  --digit-max: 198px;
+  --colon-min: 40px;
+  --colon-fluid: 13vmin;
+  --colon-max: 170px;
+}
+
+/* app container stays centered and padded on all screens */
+.app,
+.wrapper,
+.container{
+  max-width: min(1100px, 92vw);
+  margin-inline: auto;
+  padding-inline: clamp(8px, 2vw, 24px);
+}
+
+/* Mode toggle row wraps nicely on small screens */
+.mode-toggle{
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+  margin-block: var(--space-2);
+}
+
+/* ===================== Pills (unselected glassy, selected solid) ======== */
+.mode-btn{
+  border: var(--ring);
+  border-color: var(--glass-border);
+  border-radius: var(--pill-radius);
+  background: var(--glass-bg);
+  backdrop-filter: blur(6px) saturate(110%);
+  -webkit-backdrop-filter: blur(6px) saturate(110%);
+  color: rgba(255,255,255,.92);
+  padding: var(--pill-pad-y) var(--pill-pad-x);
+  font-size: clamp(14px, 1.6vw, 18px);
+  font-weight: 600;
+  letter-spacing: .02em;
+  text-transform: lowercase;
+  transition: background .18s ease, color .18s ease, border-color .18s ease, transform .18s ease, box-shadow .18s ease;
+}
+.mode-btn:hover{ background: var(--glass-bg-hover); color:#fff; transform: translateY(-2px); }
+.mode-btn:focus-visible{ outline: 2px solid rgba(255,255,255,.85); outline-offset: 3px; }
+.mode-btn.is-active{
+  background: rgba(255,255,255,.96);
+  color: #1b1b1b;
+  border-color: transparent;
+  box-shadow: 0 14px 28px rgba(0,0,0,.22);
+  transform: translateY(-1px);
+}
+.mode-btn:active{ transform: translateY(0); }
+
+/* ===================== Timer sizing (fluid, no overflow) =============== */
+.time-wrap, .timer, .time, .display{
+  display: flex; align-items: baseline; justify-content: center;
+  gap: clamp(8px, 3vw, 20px);
+}
+.flip::before, .flip::after{
+  /* your digits */
+  font-size: clamp(var(--digit-min), var(--digit-fluid), var(--digit-max));
+  line-height: .9;
+  font-weight: 800;
+  letter-spacing: .02em;
+  font-variant-numeric: tabular-nums;
+}
+.colon{
+  width: auto;
+  font-size: clamp(var(--colon-min), var(--colon-fluid), var(--colon-max));
+  line-height: .8;
+}
+
+/* ===================== Buttons row ===================================== */
+.controls, .control-row{
+  display:flex; gap: var(--space-3); justify-content:center; align-items:center;
+  margin-top: var(--space-3);
+}
+.control-btn--primary{
+  padding: var(--primary-pad-y) var(--primary-pad-x);
+  background: rgba(255,255,255,.92);
+  color:#161616; border: none;
+  border-radius: 20px;
+  box-shadow: 0 18px 36px rgba(0,0,0,.28);
+  font-weight:700;
+}
+.control-btn--icon{
+  width: var(--icon-diam); height: var(--icon-diam);
+  border-radius: 50%;
+  display: inline-grid; place-items: center;
+  background: rgba(0,0,0,.55);
+  border: var(--ring);
+  color:#fff;
+  box-shadow: 0 14px 28px rgba(0,0,0,.26);
+}
+.control-btn--icon svg{
+  width: 58%; height: 58%; display:block;
+}
+.control-btn--icon:hover:not(:disabled),
+.control-btn--icon:focus-visible:not(:disabled){
+  border-color: rgba(255,255,255,.78);
+  background: rgba(255,255,255,.10);
+}
+
+/* ===================== Breakpoints (height + width aware) ============== */
+/* Very small phones or short landscape heights */
+@media (max-width: 360px), (max-height: 420px){
+  :root{ --digit-fluid: 20vmin; --colon-fluid: 16vmin; }
+  .mode-toggle{ gap: var(--space-1); }
+  .control-btn--primary{ width: min(88vw, 480px); }
+}
+
+/* Tablets */
+@media (min-width: 600px) and (max-width: 899px){
+  :root{ --digit-fluid: 15vmin; --colon-fluid: 12vmin; }
+}
+
+/* Laptops */
+@media (min-width: 900px) and (max-width: 1279px){
+  :root{ --digit-fluid: 14vmin; }
+}
+
+/* Large desktop / ultrawide */
+@media (min-width: 1280px){
+  :root{ --digit-max: 210px; --colon-max: 190px; }
+}
+
+/* Accessibility niceties */
+@media (prefers-reduced-motion: reduce){
+  *{ transition: none !important; }
+}
+
+/* Top spacing so the pills don’t collide with the viewport notch on mobile */
+.header, .top, .mode-toggle{ margin-top: clamp(8px, 3vh, 24px); }
+
+/* Keep big-number dominance but prevent wrap on narrow widths */
+.time-wrap{ flex-wrap: nowrap; }
+
+/* Primary button gets a tiny lift on hover; still accessible on touch */
+.control-btn--primary:hover{ transform: translateY(-1px); }
+.control-btn--primary:active{ transform: translateY(0); }
+
+/* Fine-tune extremely wide screens so digits don’t dwarf pills */
+@media (min-width: 1920px){
+  :root{ --digit-max: 220px; --colon-max: 200px; }
+  .mode-toggle{ gap: clamp(16px, 1.2vw, 28px); }
+}
