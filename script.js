@@ -173,16 +173,37 @@ function closeSheet() {
 }
 
 async function loadImagesManifest() {
-  // Accept both {images:[...]} and ["...","..."]
-  try {
-    const res = await fetch('assets/images.json', { cache: 'no-store' });
-    if (!res.ok) return [];
-    const json = await res.json();
-    const list = Array.isArray(json) ? json : (Array.isArray(json.images) ? json.images : []);
-    return list.filter((p) => /\.(png|jpe?g)$/i.test(p));
-  } catch (_) {
-    return []; // no manifest, no picker
+  // Prefer server-enumerated list (auto-updates on deploy), fall back to legacy manifest.
+  const sources = [
+    () => fetch('/api/backgrounds', { cache: 'no-store' }),
+    () => fetch('assets/images.json', { cache: 'no-store' }),
+  ];
+
+  for (const getSource of sources) {
+    try {
+      const res = await getSource();
+      if (!res || !res.ok) continue;
+      const data = await res.json();
+      const list = Array.isArray(data)
+        ? data
+        : (Array.isArray(data.images) ? data.images : []);
+      const cleaned = list
+        .filter((p) => typeof p === 'string' && /\.(png|jpe?g)$/i.test(p));
+      if (cleaned.length) {
+        const seen = new Set();
+        return cleaned.filter((url) => {
+          const key = url.toLowerCase();
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+      }
+    } catch (_) {
+      // try next source
+    }
   }
+
+  return [];
 }
 
 async function initAppearance() {
