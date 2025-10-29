@@ -71,11 +71,12 @@ body { background: #000; font-family: ui-sans-serif, system-ui, -apple-system, S
 .flip .top, .flip .bottom { display: none !important; }
 
 .colon {
-  position: relative;
   width: clamp(28px, 7vw, 88px);
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: clamp(14px, 4vw, 36px);
   padding: 0;
   text-indent: -9999px;
   color: #fff;
@@ -83,16 +84,11 @@ body { background: #000; font-family: ui-sans-serif, system-ui, -apple-system, S
 .colon::before,
 .colon::after{
   content: "";
-  position: absolute;
-  left: 50%;
   width: clamp(12px, 2.6vw, 22px);
   height: clamp(12px, 2.6vw, 22px);
   background: currentColor;
   border-radius: 50%;
-  transform: translateX(-50%);
 }
-.colon::before{ top: 26%; }
-.colon::after{ bottom: 26%; }
 
 /* Time input overlay */
 .time-input {
