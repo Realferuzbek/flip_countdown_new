@@ -77,12 +77,34 @@
   <!-- Background picker sheet -->
   <div id="bg-sheet" class="sheet" hidden>
     <div class="sheet__backdrop" data-close></div>
-    <div class="sheet__panel" role="dialog" aria-modal="true" aria-labelledby="bg-title" tabindex="-1">
-      <header class="sheet__header">
-        <h3 id="bg-title">Choose background</h3>
-        <button class="icon-btn" type="button" data-close aria-label="Close">✕</button>
-      </header>
-      <div id="bg-grid" class="sheet__grid" role="list"></div>
+    <div class="sheet__panel" role="dialog" aria-modal="true" aria-labelledby="sheet-title" tabindex="-1">
+      <h2 id="sheet-title" class="visually-hidden">Settings</h2>
+      <input type="radio" name="sheet-tab" id="sheet-tab-timers" class="sheet__tab-input" />
+      <input type="radio" name="sheet-tab" id="sheet-tab-background" class="sheet__tab-input" checked />
+      <button class="sheet__close icon-btn" type="button" data-close aria-label="Close">✕</button>
+      <div class="sheet__layout">
+        <nav class="sheet__sidebar" aria-label="Settings sections">
+          <label for="sheet-tab-timers" class="sheet__tab" id="sheet-tab-timers-label">
+            <span>Timers</span>
+          </label>
+          <label for="sheet-tab-background" class="sheet__tab" id="sheet-tab-background-label">
+            <span>Background</span>
+          </label>
+        </nav>
+        <div class="sheet__content">
+          <section class="sheet__pane sheet__pane--timers" role="region" aria-labelledby="sheet-tab-timers-label">
+            <div class="sheet__empty">
+              <p>Timer presets are coming soon.</p>
+            </div>
+          </section>
+          <section class="sheet__pane sheet__pane--background" role="region" aria-labelledby="sheet-tab-background-label">
+            <header class="sheet__header">
+              <h3 id="bg-title">Choose background</h3>
+            </header>
+            <div id="bg-grid" class="sheet__grid" role="list"></div>
+          </section>
+        </div>
+      </div>
     </div>
   </div>
 
