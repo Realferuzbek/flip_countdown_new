@@ -526,3 +526,36 @@ body.sheet-open { overflow: hidden; }
   :root{ --digit-max: 220px; --colon-max: 200px; }
   .mode-toggle{ gap: clamp(16px, 1.2vw, 28px); }
 }
+
+/* Restart button — icon proportions, ring, and hover feel */
+#resetBtn.control-btn--icon{
+  /* keep existing size if defined elsewhere; only ensure color/ring look right */
+  color: #fff;                       /* white icon on dark backgrounds */
+  border: 1.5px solid rgba(255,255,255,.40);
+  background: rgba(0,0,0,.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  box-shadow: 0 14px 28px rgba(0,0,0,.26);
+}
+#resetBtn.control-btn--icon svg.icon-refresh{
+  width: 62%;
+  height: 62%;
+  display: block;
+  /* ensure crisp strokes at any size */
+  shape-rendering: geometricPrecision;
+  vector-effect: non-scaling-stroke;
+}
+#resetBtn.control-btn--icon:hover:not(:disabled),
+#resetBtn.control-btn--icon:focus-visible:not(:disabled){
+  border-color: rgba(255,255,255,.80);
+  background: rgba(255,255,255,.10);
+  outline: none;
+}
+#resetBtn.control-btn--icon:disabled{
+  opacity: .45; cursor: not-allowed;
+}
+
+/* Responsive safety: respect very small heights (landscape phones) */
+@media (max-height: 420px){
+  #resetBtn.control-btn--icon svg.icon-refresh{ width:58%; height:58%; }
+}
