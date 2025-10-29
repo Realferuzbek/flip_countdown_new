@@ -3,10 +3,25 @@
 // =======================
 
 // ----- State -----
+const DEFAULT_TIMER_MINUTES = Object.freeze({
+  pomodoro: 25,
+  short: 5,
+  long: 15,
+});
+const TIMER_STORE_KEY = 'timer-presets';
+const TIMER_MIN_MINUTES = 1;
+const TIMER_MAX_MINUTES = 99;
+const THEME_NAME_MAP = Object.freeze({
+  'assets/backgrounds/background.jpg': 'Dark Mountain',
+  'assets/backgrounds/background_2.png': 'Midnight Clouds',
+  'assets/backgrounds/background_3.jpg': 'Grey Moon',
+});
+const DEFAULT_THEME_NAME = 'New Background';
+
 const MODE_CONFIG = {
-  pomodoro: { label: 'pomodoro', seconds: 25 * 60 },
-  short: { label: 'short break', seconds: 5 * 60 },
-  long: { label: 'long break', seconds: 15 * 60 },
+  pomodoro: { label: 'pomodoro', seconds: DEFAULT_TIMER_MINUTES.pomodoro * 60 },
+  short: { label: 'short break', seconds: DEFAULT_TIMER_MINUTES.short * 60 },
+  long: { label: 'long break', seconds: DEFAULT_TIMER_MINUTES.long * 60 },
 };
 let totalSeconds = 0;
 let timer = null;           // setInterval handle
@@ -35,6 +50,13 @@ let appliedBackground = currentBg();
 const modeButtons = Array.from(document.querySelectorAll('.mode-btn'));
 const startBtn = document.getElementById('startBtn');
 const resetBtn = document.getElementById('resetBtn');
+const timerInputs = {
+  pomodoro: document.getElementById('pomodoro-focus'),
+  short: document.getElementById('pomodoro-short'),
+  long: document.getElementById('pomodoro-long'),
+};
+const timerSaveBtn = document.getElementById('pomodoro-save-btn');
+const timerResetBtn = document.getElementById('pomodoro-reset-btn');
 
 function resolveBackgroundUrl(src) {
   if (!src) return '';
@@ -44,6 +66,21 @@ function resolveBackgroundUrl(src) {
   } catch (_) {
     return src;
   }
+}
+
+function normalizeBackgroundKey(url) {
+  if (!url) return '';
+  const normalized = url.replace(/\\/g, '/');
+  const idx = normalized.lastIndexOf('assets/backgrounds/');
+  if (idx !== -1) {
+    return normalized.slice(idx);
+  }
+  return normalized;
+}
+
+function themeNameFor(url) {
+  const key = normalizeBackgroundKey(url);
+  return THEME_NAME_MAP[key] || DEFAULT_THEME_NAME;
 }
 
 function applyBackground(url, { persist = true } = {}) {
@@ -91,6 +128,88 @@ function syncModeButtons(mode = activeMode) {
     btn.classList.toggle('is-active', isActive);
     btn.setAttribute('aria-pressed', String(isActive));
   });
+}
+
+function modeMinutesFromConfig() {
+  return {
+    pomodoro: Math.round((MODE_CONFIG.pomodoro?.seconds ?? DEFAULT_TIMER_MINUTES.pomodoro * 60) / 60),
+    short: Math.round((MODE_CONFIG.short?.seconds ?? DEFAULT_TIMER_MINUTES.short * 60) / 60),
+    long: Math.round((MODE_CONFIG.long?.seconds ?? DEFAULT_TIMER_MINUTES.long * 60) / 60),
+  };
+}
+
+function updateModeConfigFromMinutes(minutes) {
+  ['pomodoro', 'short', 'long'].forEach((key) => {
+    if (!MODE_CONFIG[key]) return;
+    const base = DEFAULT_TIMER_MINUTES[key];
+    const value = minutes?.[key];
+    const mins = sanitizeMinutes(value, base);
+    MODE_CONFIG[key].seconds = mins * 60;
+  });
+}
+
+function sanitizeMinutes(value, fallback) {
+  const minutes = Number.parseInt(value, 10);
+  if (!Number.isFinite(minutes)) return fallback;
+  return Math.max(TIMER_MIN_MINUTES, Math.min(TIMER_MAX_MINUTES, minutes));
+}
+
+function syncTimerInputs(minutes = modeMinutesFromConfig()) {
+  Object.entries(timerInputs).forEach(([key, input]) => {
+    if (!input) return;
+    const mins = minutes?.[key] ?? DEFAULT_TIMER_MINUTES[key];
+    input.value = mins;
+  });
+}
+
+function readTimerInputs() {
+  const current = modeMinutesFromConfig();
+  const minutes = { ...current };
+  Object.entries(timerInputs).forEach(([key, input]) => {
+    if (!input) return;
+    const sanitized = sanitizeMinutes(input.value, current[key]);
+    minutes[key] = sanitized;
+    if (String(sanitized) !== String(input.value)) {
+      input.value = sanitized;
+    }
+  });
+  return minutes;
+}
+
+function persistTimerMinutes(minutes) {
+  try {
+    localStorage.setItem(TIMER_STORE_KEY, JSON.stringify(minutes));
+  } catch (_) {}
+}
+
+function applyTimerMinutes(minutes, { persist = true, resetTimer = true } = {}) {
+  updateModeConfigFromMinutes(minutes);
+  if (persist) persistTimerMinutes(minutes);
+  syncTimerInputs(minutes);
+  if (resetTimer) {
+    reset();
+  } else {
+    refreshControls();
+  }
+}
+
+function loadTimerPresets() {
+  let stored = null;
+  try {
+    const raw = localStorage.getItem(TIMER_STORE_KEY);
+    if (raw) stored = JSON.parse(raw);
+  } catch (_) {}
+  const minutes = { ...DEFAULT_TIMER_MINUTES };
+  if (stored && typeof stored === 'object') {
+    ['pomodoro', 'short', 'long'].forEach((key) => {
+      if (key in stored) {
+        minutes[key] = sanitizeMinutes(stored[key], minutes[key]);
+      }
+    });
+  }
+  updateModeConfigFromMinutes(minutes);
+  persistTimerMinutes(minutes);
+  return minutes;
 }
 
 function refreshControls() {
@@ -246,7 +365,11 @@ async function initAppearance() {
       btn.className = 'thumb';
       btn.type = 'button';
       btn.dataset.bgOption = url;
-      btn.innerHTML = `<img loading="lazy" decoding="async" src="${url}" alt="">`;
+      const themeLabel = themeNameFor(url);
+      btn.dataset.themeName = themeLabel;
+      btn.setAttribute('aria-label', `Use the ${themeLabel} background`);
+      btn.setAttribute('role', 'listitem');
+      btn.innerHTML = `<img loading="lazy" decoding="async" src="${url}" alt="${themeLabel} preview">`;
       btn.addEventListener('click', () => {
         applyBackground(url);
         syncThumbSelection(grid, url);
@@ -344,10 +467,32 @@ function initModeControls() {
   setActiveMode(activeMode, { resetToPreset: true });
 }
 
+function initTimerSettings() {
+  const hasInputs = Object.values(timerInputs).some(Boolean);
+  if (!hasInputs) return;
+
+  syncTimerInputs();
+
+  if (timerSaveBtn) {
+    timerSaveBtn.addEventListener('click', () => {
+      const minutes = readTimerInputs();
+      applyTimerMinutes(minutes);
+      closeSheet();
+    });
+  }
+
+  if (timerResetBtn) {
+    timerResetBtn.addEventListener('click', () => {
+      applyTimerMinutes({ ...DEFAULT_TIMER_MINUTES });
+    });
+  }
+}
+
 // ----- Boot / focus -----
 document.addEventListener('DOMContentLoaded', async () => {
   document.body.tabIndex = -1;
   document.body.focus();
+  loadTimerPresets();
   initModeControls();
   loadBundledAssets();
   try {
@@ -355,6 +500,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   } catch (err) {
     console.error('Failed to initialize appearance controls:', err);
   }
+  initTimerSettings();
   render();
   refreshControls();
 });

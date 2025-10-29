@@ -71,11 +71,28 @@ body { background: #000; font-family: ui-sans-serif, system-ui, -apple-system, S
 .flip .top, .flip .bottom { display: none !important; }
 
 .colon {
+  position: relative;
   width: clamp(28px, 7vw, 88px);
-  display: grid; place-items: center;
-  padding: 0; line-height: 1;
-  font-size: clamp(48px, 15vw, 176px); font-weight: 700; color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  text-indent: -9999px;
+  color: #fff;
 }
+.colon::before,
+.colon::after{
+  content: "";
+  position: absolute;
+  left: 50%;
+  width: clamp(12px, 2.6vw, 22px);
+  height: clamp(12px, 2.6vw, 22px);
+  background: currentColor;
+  border-radius: 50%;
+  transform: translateX(-50%);
+}
+.colon::before{ top: 26%; }
+.colon::after{ bottom: 26%; }
 
 /* Time input overlay */
 .time-input {
@@ -868,7 +885,6 @@ body.sheet-open { overflow: hidden; }
   padding-right: 2px;
 }
 .theme-options .thumb{
-  --theme-name: "Custom Theme";
   display: grid;
   grid-template-columns: 96px 1fr;
   grid-template-rows: auto auto;
@@ -892,7 +908,7 @@ body.sheet-open { overflow: hidden; }
   box-shadow: 0 14px 28px rgba(0,0,0,0.45);
 }
 .theme-options .thumb::after{
-  content: var(--theme-name);
+  content: attr(data-theme-name);
   grid-column: 2;
   grid-row: 1;
   align-self: end;
@@ -934,15 +950,6 @@ body.sheet-open { overflow: hidden; }
 .theme-options .thumb.is-active::before{
   content: "Active theme";
   color: rgba(118,131,255,0.82);
-}
-.theme-options .thumb[data-bg-option$="background_2.png"]{
-  --theme-name: "Midnight Clouds";
-}
-.theme-options .thumb[data-bg-option$="background.jpg"]{
-  --theme-name: "Dark Mountain";
-}
-.theme-options .thumb[data-bg-option$="background_3.jpg"]{
-  --theme-name: "Grey Moon";
 }
 .sheet__pane--timers{
   align-items: stretch;
