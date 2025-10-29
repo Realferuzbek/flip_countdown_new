@@ -594,3 +594,9 @@ body.sheet-open { overflow: hidden; }
   box-shadow: inherit;
 }
 */
+
+/* Guarantee dynamic backgrounds stay clear (override inline brightness) */
+.bg{
+  filter: none !important;
+  -webkit-filter: none !important;
+}
