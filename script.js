@@ -454,6 +454,7 @@ function loadBundledAssets() {
     });
     alarmStopBtn.dataset.bound = 'true';
   }
+  toggleAlarmStopButton(false);
 }
 
 function initModeControls() {

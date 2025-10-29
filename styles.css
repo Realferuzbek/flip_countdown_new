@@ -72,18 +72,19 @@ body { background: #000; font-family: ui-sans-serif, system-ui, -apple-system, S
 
 .colon {
   width: clamp(28px, 7vw, 88px);
+  height: clamp(64px, 16vw, 180px);
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
-  gap: clamp(14px, 4vw, 36px);
-  padding: 0;
+  padding: clamp(6px, 1.3vw, 18px) 0;
   text-indent: -9999px;
   color: #fff;
 }
 .colon::before,
 .colon::after{
   content: "";
+  display: block;
   width: clamp(12px, 2.6vw, 22px);
   height: clamp(12px, 2.6vw, 22px);
   background: currentColor;
