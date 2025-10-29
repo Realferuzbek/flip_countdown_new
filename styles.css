@@ -559,3 +559,40 @@ body.sheet-open { overflow: hidden; }
 @media (max-height: 420px){
   #resetBtn.control-btn--icon svg.icon-refresh{ width:58%; height:58%; }
 }
+
+#resetBtn.control-btn--icon{
+  /* Keep its existing dimensions from your site; just ensure ring & tone */
+  color:#fff;                                 /* icon stays white */
+  border: 1.5px solid rgba(255,255,255,.40);
+  background: rgba(0,0,0,.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  box-shadow: 0 14px 28px rgba(0,0,0,.26);
+}
+#resetBtn.control-btn--icon:hover:not(:disabled),
+#resetBtn.control-btn--icon:focus-visible:not(:disabled){
+  border-color: rgba(255,255,255,.80);
+  background: rgba(255,255,255,.10);
+}
+#resetBtn.control-btn--icon svg{
+  width: 62%;
+  height: 62%;
+  display:block;
+  shape-rendering: geometricPrecision;
+  vector-effect: non-scaling-stroke;
+}
+
+/* IMPORTANT: ensure other icon buttons (e.g., settings) keep their current look */
+#fab-bg.control-btn--icon{ all: revert-layer; }
+
+/* If your CSS doesn’t support revert-layer (older pipeline), explicitly unset ONLY what this restart override might have changed globally: */
+/*
+.control-btn--icon{
+  color: inherit;
+  border-color: inherit;
+  background: inherit;
+  backdrop-filter: inherit;
+  -webkit-backdrop-filter: inherit;
+  box-shadow: inherit;
+}
+*/

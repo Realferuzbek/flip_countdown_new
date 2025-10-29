@@ -32,14 +32,16 @@
       <div class="controls" role="group" aria-label="Timer controls">
         <button id="startBtn" class="control-btn control-btn--primary" type="button">start</button>
         <button id="resetBtn" class="control-btn control-btn--icon" type="button" aria-label="Restart timer" title="Restart timer">
-          <svg viewBox="0 0 24 24" aria-hidden="true" class="icon-refresh">
-            <g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-              <!-- 300° circular arc + arrow head -->
-              <path d="M20 6v6h-6"/>
-              <path d="M20 12a8 8 0 1 1-2.34-5.66"/>
-            </g>
-          </svg>
-        </button>
+            <svg viewBox="0 0 24 24" aria-hidden="true" class="icon-refresh">
+              <!-- Arc is stroked; arrowhead is a small filled triangle for the crisp “reference” look -->
+              <g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                <!-- 300° clockwise arc ending near 1–2 o’clock -->
+                <path d="M20 12a8 8 0 1 1-2.4-5.7"/>
+              </g>
+              <!-- solid arrowhead pointing clockwise at the arc end -->
+              <path d="M21 6.6l-3.2-3.2v6.4z" fill="currentColor"/>
+            </svg>
+          </button>
         <button id="fab-bg" class="control-btn control-btn--icon" type="button" aria-label="Backgrounds" title="Backgrounds" hidden>
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
