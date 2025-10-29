@@ -85,7 +85,7 @@
       <div class="sheet__layout">
         <nav class="sheet__sidebar" aria-label="Settings sections">
           <label for="sheet-tab-timers" class="sheet__tab" id="sheet-tab-timers-label">
-            <span>Timers</span>
+            <span>Pomodoro</span>
           </label>
           <label for="sheet-tab-background" class="sheet__tab" id="sheet-tab-background-label">
             <span>Background</span>
@@ -93,9 +93,41 @@
         </nav>
         <div class="sheet__content">
           <section class="sheet__pane sheet__pane--timers" role="region" aria-labelledby="sheet-tab-timers-label">
-            <div class="sheet__empty">
-              <p>Timer presets are coming soon.</p>
+            <header class="sheet__section-header">
+              <div>
+                <h3>Pomodoro</h3>
+                <p>Dial in focus and breaks for your perfect flow.</p>
+              </div>
+            </header>
+            <div class="pomodoro-grid" role="group" aria-label="Timer durations">
+              <div class="pomodoro-field">
+                <label class="pomodoro-label" for="pomodoro-focus">Pomodoro</label>
+                <div class="pomodoro-input">
+                  <input id="pomodoro-focus" type="number" inputmode="numeric" min="1" max="99" value="25" aria-describedby="pomodoro-focus-meta" />
+                </div>
+                <span id="pomodoro-focus-meta" class="pomodoro-meta">minutes</span>
+              </div>
+              <div class="pomodoro-field">
+                <label class="pomodoro-label" for="pomodoro-short">Short Break</label>
+                <div class="pomodoro-input">
+                  <input id="pomodoro-short" type="number" inputmode="numeric" min="1" max="99" value="5" aria-describedby="pomodoro-short-meta" />
+                </div>
+                <span id="pomodoro-short-meta" class="pomodoro-meta">minutes</span>
+              </div>
+              <div class="pomodoro-field">
+                <label class="pomodoro-label" for="pomodoro-long">Long Break</label>
+                <div class="pomodoro-input">
+                  <input id="pomodoro-long" type="number" inputmode="numeric" min="1" max="99" value="15" aria-describedby="pomodoro-long-meta" />
+                </div>
+                <span id="pomodoro-long-meta" class="pomodoro-meta">minutes</span>
+              </div>
             </div>
+            <footer class="pomodoro-actions">
+              <button type="button" class="pomodoro-btn pomodoro-btn--outline">Reset all</button>
+              <div class="pomodoro-actions__spacer" aria-hidden="true"></div>
+              <button type="button" class="pomodoro-btn pomodoro-btn--muted">Close</button>
+              <button type="button" class="pomodoro-btn pomodoro-btn--primary">Save changes</button>
+            </footer>
           </section>
           <section class="sheet__pane sheet__pane--background" role="region" aria-labelledby="sheet-tab-background-label">
             <header class="sheet__header">
