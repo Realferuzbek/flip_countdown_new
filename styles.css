@@ -583,8 +583,6 @@ body.sheet-open { overflow: hidden; }
 }
 
 /* IMPORTANT: ensure other icon buttons (e.g., settings) keep their current look */
-#fab-bg.control-btn--icon{ all: revert-layer; }
-
 /* If your CSS doesn’t support revert-layer (older pipeline), explicitly unset ONLY what this restart override might have changed globally: */
 /*
 .control-btn--icon{
