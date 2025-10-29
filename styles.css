@@ -71,29 +71,17 @@ body { background: #000; font-family: ui-sans-serif, system-ui, -apple-system, S
 .flip .top, .flip .bottom { display: none !important; }
 
 .colon {
-  position: relative;
   width: clamp(28px, 7vw, 88px);
-  height: clamp(64px, 16vw, 180px);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0;
-  text-indent: -9999px;
+  font-weight: 800;
+  font-size: clamp(56px, 17vw, 190px);
+  line-height: 0.8;
+  transform: translateY(-0.04em);
   color: #fff;
 }
-.colon::before,
-.colon::after{
-  content: "";
-  position: absolute;
-  left: 50%;
-  width: clamp(12px, 2.6vw, 22px);
-  height: clamp(12px, 2.6vw, 22px);
-  background: currentColor;
-  border-radius: 50%;
-  transform: translateX(-50%);
-}
-.colon::before{ top: 32%; }
-.colon::after{ bottom: 32%; }
 
 /* Time input overlay */
 .time-input {

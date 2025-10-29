@@ -24,7 +24,7 @@ const MODE_CONFIG = {
   long: { label: 'long break', seconds: DEFAULT_TIMER_MINUTES.long * 60 },
 };
 let totalSeconds = 0;
-let timer = null;           // setInterval handle
+let tickHandle = null;
 let targetTimestamp = null;
 let alarmPlaying = false;
 let compactMode = false;
@@ -225,8 +225,8 @@ function loadTimerPresets() {
 }
 
 function refreshControls() {
+  const running = (targetTimestamp !== null);
   if (startBtn) {
-    const running = Boolean(timer);
     startBtn.textContent = running ? 'pause' : 'start';
     startBtn.classList.toggle('is-running', running);
     startBtn.setAttribute('aria-pressed', running ? 'true' : 'false');
@@ -234,7 +234,6 @@ function refreshControls() {
   }
   if (resetBtn) {
     const preset = MODE_CONFIG[activeMode]?.seconds ?? 0;
-    const running = Boolean(timer);
     resetBtn.disabled = !running && totalSeconds === preset;
   }
   syncModeButtons();
@@ -469,7 +468,7 @@ function initModeControls() {
 
   if (startBtn) {
     startBtn.addEventListener('click', () => {
-      if (timer) {
+      if (targetTimestamp !== null) {
         pause();
       } else {
         start();
@@ -524,6 +523,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   refreshControls();
 });
 
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && targetTimestamp !== null) {
+    scheduleTick(true);
+  }
+});
+
 // ===== Helpers =====
 function clampTime(m, s) {
   m = Math.max(0, Math.min(59, Number.isFinite(m) ? m : 0));
@@ -556,27 +561,42 @@ function isSheetOpen() {
   return Boolean(sheet && !sheet.hidden);
 }
 
-// ===== Timer (setInterval so it keeps updating while unfocused) =====
+// ===== Timer helpers =====
+function clearScheduledTick() {
+  if (tickHandle) {
+    clearTimeout(tickHandle);
+    tickHandle = null;
+  }
+}
+
+function scheduleTick(immediate = false) {
+  clearScheduledTick();
+  if (targetTimestamp === null) return;
+  if (immediate) {
+    tick();
+  } else {
+    tickHandle = setTimeout(tick, 250);
+  }
+}
+
+// ===== Timer (keeps accurate time even while unfocused) =====
 function start() {
-  if (totalSeconds <= 0 || timer) {
+  if (totalSeconds <= 0 || targetTimestamp !== null) {
     refreshControls();
     return;
   }
   targetTimestamp = Date.now() + totalSeconds * 1000;
-  timer = setInterval(tick, 1000);
+  scheduleTick(true);
   refreshControls();
 }
 function pause(options = {}) {
   const { refresh = true } = options;
-  if (timer) {
-    clearInterval(timer);
-    timer = null;
-  }
   if (targetTimestamp !== null) {
     const remainingMs = Math.max(0, targetTimestamp - Date.now());
     totalSeconds = Math.ceil(remainingMs / 1000);
     targetTimestamp = null;
   }
+  clearScheduledTick();
   if (refresh) refreshControls();
 }
 function reset() {
@@ -584,24 +604,24 @@ function reset() {
   stopAlarm(true);
   const preset = MODE_CONFIG[activeMode]?.seconds ?? 0;
   totalSeconds = preset;
-  targetTimestamp = null;
   render();
   refreshControls();
 }
 function tick() {
-  if (targetTimestamp !== null) {
-    const remainingMs = Math.max(0, targetTimestamp - Date.now());
-    totalSeconds = Math.ceil(remainingMs / 1000);
-  } else {
-    totalSeconds = Math.max(0, totalSeconds - 1);
-  }
+  tickHandle = null;
+  if (targetTimestamp === null) return;
+  const remainingMs = Math.max(0, targetTimestamp - Date.now());
+  totalSeconds = Math.ceil(remainingMs / 1000);
   render();
   if (totalSeconds <= 0) {
-    pause({ refresh: false });
-    playAlarm();
     targetTimestamp = null;
+    clearScheduledTick();
+    refreshControls();
+    playAlarm();
+    return;
   }
   refreshControls();
+  scheduleTick();
 }
 
 // ===== Alarm =====
@@ -675,7 +695,7 @@ window.addEventListener('keydown', (e) => {
     (document.activeElement === timeInput && timeInput.classList.contains('active'));
   if (editing) return;
 
-  if (e.code === 'Space')        { e.preventDefault(); if (timer) pause(); else start(); return; }
+  if (e.code === 'Space')        { e.preventDefault(); if (targetTimestamp !== null) pause(); else start(); return; }
   if (e.key === 'Escape')        { reset(); return; }
   if (e.key.toLowerCase() === 'j') {
     e.preventDefault();
