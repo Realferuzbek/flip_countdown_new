@@ -666,3 +666,50 @@ body.sheet-open { overflow: hidden; }
 #fab-bg.control-btn--icon:focus-visible:not(:disabled)::after{
   opacity: .72;
 }
+
+#resetBtn.control-btn--icon{
+  position: relative;
+  background:
+    radial-gradient(circle at 30% 25%, rgba(255,255,255,.42) 0%, rgba(255,255,255,.16) 32%, rgba(18,20,28,.92) 74%, rgba(10,12,18,.95) 100%);
+  overflow: hidden;
+}
+#resetBtn.control-btn--icon::before,
+#resetBtn.control-btn--icon::after{
+  content:"";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  transition: opacity .25s ease, transform .25s ease;
+}
+#resetBtn.control-btn--icon::before{
+  inset: 3px;
+  background:
+    radial-gradient(circle at 28% 24%, rgba(255,255,255,.7) 0%, rgba(255,255,255,.24) 30%, transparent 62%);
+  opacity: .92;
+}
+#resetBtn.control-btn--icon::after{
+  inset: 1px;
+  background:
+    radial-gradient(circle at 72% 80%, rgba(255,255,255,.08) 0%, transparent 58%),
+    radial-gradient(circle at 50% -20%, rgba(255,255,255,.36) 0%, rgba(255,255,255,.08) 36%, transparent 70%);
+  opacity: .55;
+}
+#resetBtn.control-btn--icon svg{
+  position: relative;
+  z-index: 1;
+}
+#resetBtn.control-btn--icon:hover:not(:disabled),
+#resetBtn.control-btn--icon:focus-visible:not(:disabled){
+  background:
+    radial-gradient(circle at 34% 28%, rgba(255,255,255,.47) 0%, rgba(255,255,255,.18) 36%, rgba(22,24,32,.9) 74%, rgba(12,14,20,.95) 100%);
+}
+#resetBtn.control-btn--icon:hover:not(:disabled)::before,
+#resetBtn.control-btn--icon:focus-visible:not(:disabled)::before{
+  opacity: 1;
+  transform: scale(1.03);
+}
+#resetBtn.control-btn--icon:hover:not(:disabled)::after,
+#resetBtn.control-btn--icon:focus-visible:not(:disabled)::after{
+  opacity: .72;
+}
