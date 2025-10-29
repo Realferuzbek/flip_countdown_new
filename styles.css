@@ -16,14 +16,17 @@ body { background: #000; font-family: ui-sans-serif, system-ui, -apple-system, S
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: clamp(12px, 2.4vw, 24px);
+  gap: clamp(12px, 2.2vw, 22px);
   margin-bottom: clamp(8px, 2vh, 18px);
 }
 .mode-btn {
   border: 1.5px solid rgba(255,255,255,0.55);
   border-radius: 999px;
-  background: color-mix(in srgb, rgba(0,0,0,0.55) 65%, transparent);
-  color: rgba(255,255,255,0.88);
+  /* transparent/glassy surface that adapts to BG */
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(6px) saturate(110%);
+  -webkit-backdrop-filter: blur(6px) saturate(110%);
+  color: rgba(255,255,255,0.9);
   padding: clamp(10px, 1.8vw, 16px) clamp(24px, 5vw, 40px);
   font-size: clamp(14px, 1.6vw, 18px);
   font-weight: 600;
@@ -31,11 +34,11 @@ body { background: #000; font-family: ui-sans-serif, system-ui, -apple-system, S
   text-transform: lowercase;
   cursor: pointer;
   transition: background .18s ease, color .18s ease, border .18s ease, box-shadow .18s ease, transform .18s ease;
-  backdrop-filter: blur(6px);
 }
 .mode-btn:hover {
   transform: translateY(-2px);
   border-color: rgba(255,255,255,0.85);
+  background: rgba(255,255,255,0.14);
   color: #fff;
 }
 .mode-btn:focus-visible {
@@ -43,10 +46,11 @@ body { background: #000; font-family: ui-sans-serif, system-ui, -apple-system, S
   outline-offset: 3px;
 }
 .mode-btn.is-active {
-  background: rgba(255,255,255,0.95);
+  background: rgba(255,255,255,0.96);
   color: #1c1c1c;
   border-color: transparent;
-  box-shadow: 0 16px 32px rgba(0,0,0,0.28);
+  box-shadow: 0 14px 28px rgba(0,0,0,0.22);
+  transform: translateY(-1px);
 }
 .mode-btn.is-active:hover {
   color: #1c1c1c;
@@ -54,23 +58,23 @@ body { background: #000; font-family: ui-sans-serif, system-ui, -apple-system, S
 }
 
 /* Timer row (clean digits, no tiles) */
-.time-wrap { display: flex; align-items: center; justify-content: center; gap: clamp(8px, 1.4vw, 20px); margin: 0 auto; font-variant-numeric: tabular-nums; }
+.time-wrap { display: flex; align-items: center; justify-content: center; gap: clamp(10px, 3vw, 20px); margin: 0 auto; font-variant-numeric: tabular-nums; }
 .flip { position: relative; width: clamp(48px, 12vw, 140px); height: clamp(64px, 16vw, 180px); margin: 0; }
 .flip::before, .flip::after {
   content: attr(data-digit);
   position: absolute; inset: 0;
   display: grid; place-items: center;
   font-weight: 800; letter-spacing: 0.02em;
-  font-size: clamp(56px, 16vw, 180px);
+  font-size: clamp(56px, 17vw, 190px);
   color: #fff; text-shadow: none; background: transparent; border: 0; border-radius: 0; box-shadow: none;
 }
 .flip .top, .flip .bottom { display: none !important; }
 
 .colon {
-  width: clamp(28px, 6.5vw, 80px);
+  width: clamp(28px, 7vw, 88px);
   display: grid; place-items: center;
   padding: 0; line-height: 1;
-  font-size: clamp(48px, 14vw, 160px); font-weight: 700; color: #fff;
+  font-size: clamp(48px, 15vw, 176px); font-weight: 700; color: #fff;
 }
 
 /* Time input overlay */
@@ -112,7 +116,7 @@ body { background: #000; font-family: ui-sans-serif, system-ui, -apple-system, S
   transform: translateY(-2px);
 }
 .control-btn--primary {
-  padding: clamp(12px, 2.1vw, 18px) clamp(38px, 6.5vw, 60px);
+  padding: clamp(12px, 2.0vw, 18px) clamp(40px, 6.8vw, 64px);
   background: rgba(255,255,255,0.92);
   color: #161616;
   box-shadow: 0 18px 36px rgba(0,0,0,0.28);
@@ -126,13 +130,14 @@ body { background: #000; font-family: ui-sans-serif, system-ui, -apple-system, S
   height: clamp(52px, 8vw, 58px);
   border-radius: 50%;
   background: rgba(0,0,0,0.55);
-  border: 1.5px solid rgba(255,255,255,0.4);
+  border: 1.5px solid rgba(255,255,255,0.40);
   box-shadow: 0 14px 28px rgba(0,0,0,0.26);
   color: #fff;
 }
 .control-btn--icon:hover:not(:disabled),
 .control-btn--icon:focus-visible:not(:disabled) {
-  border-color: rgba(255,255,255,0.7);
+  border-color: rgba(255,255,255,0.75);
+  background: rgba(255,255,255,0.10);
 }
 .control-btn svg {
   width: clamp(24px, 3.5vw, 26px);
