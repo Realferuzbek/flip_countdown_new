@@ -58,6 +58,7 @@ const timerInputs = {
 };
 const timerSaveBtn = document.getElementById('pomodoro-save-btn');
 const timerResetBtn = document.getElementById('pomodoro-reset-btn');
+const alarmStopBtn = document.getElementById('fab-alarm-stop');
 
 function resolveBackgroundUrl(src) {
   if (!src) return '';
@@ -82,6 +83,16 @@ function normalizeBackgroundKey(url) {
 function themeNameFor(url) {
   const key = normalizeBackgroundKey(url);
   return THEME_NAME_MAP[key] || DEFAULT_THEME_NAME;
+}
+
+function toggleAlarmStopButton(show) {
+  if (!alarmStopBtn) return;
+  alarmStopBtn.hidden = !show;
+  if (show) {
+    alarmStopBtn.setAttribute('tabindex', '0');
+  } else {
+    alarmStopBtn.removeAttribute('tabindex');
+  }
 }
 
 function applyBackground(url, { persist = true } = {}) {
@@ -437,6 +448,12 @@ function loadBundledAssets() {
   const alarmUrl = resolveBundled('./assets/alarm.mp3');
   alarm.src = alarmUrl;
   alarm.load();
+  if (alarmStopBtn && !alarmStopBtn.dataset.bound) {
+    alarmStopBtn.addEventListener('click', () => {
+      stopAlarm(true);
+    });
+    alarmStopBtn.dataset.bound = 'true';
+  }
 }
 
 function initModeControls() {
@@ -591,7 +608,20 @@ function playAlarm() {
   if (alarmPlaying) return;
   alarm.loop = true;
   alarm.currentTime = 0;
-  alarm.play().then(() => { alarmPlaying = true; }).catch(() => {});
+  const promise = alarm.play();
+  const onSuccess = () => {
+    alarmPlaying = true;
+    toggleAlarmStopButton(true);
+  };
+  const onFailure = () => {
+    alarmPlaying = false;
+    toggleAlarmStopButton(false);
+  };
+  if (promise && typeof promise.then === 'function') {
+    promise.then(onSuccess).catch(onFailure);
+  } else {
+    onSuccess();
+  }
 }
 function stopAlarm(force = false) {
   if (!alarmPlaying) return;
@@ -600,6 +630,7 @@ function stopAlarm(force = false) {
   alarm.pause();
   alarm.currentTime = 0;
   alarmPlaying = false;
+  toggleAlarmStopButton(false);
 }
 
 // ===== Time input =====
@@ -654,5 +685,4 @@ window.addEventListener('keydown', (e) => {
     applyCompactMode(nextCompact);
     return;
   }
-  if (e.key.toLowerCase() === 'l') { e.preventDefault(); stopAlarm(); return; }
 });
