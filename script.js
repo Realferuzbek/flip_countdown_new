@@ -57,13 +57,16 @@ function applyBackground(url, { persist = true } = {}) {
     bgDiv.style.backgroundPosition = 'center';
     bgDiv.style.backgroundRepeat = 'no-repeat';
     bgDiv.style.backgroundAttachment = 'fixed';
-    bgDiv.style.filter = 'brightness(0.35)';
+    bgDiv.style.removeProperty('filter');
+    bgDiv.style.removeProperty('-webkit-filter');
   }
   document.body.style.backgroundImage = cssValue;
   document.body.style.backgroundSize = 'cover';
   document.body.style.backgroundPosition = 'center';
   document.body.style.backgroundRepeat = 'no-repeat';
   document.body.style.backgroundAttachment = 'fixed';
+  document.body.style.removeProperty('filter');
+  document.body.style.removeProperty('-webkit-filter');
   appliedBackground = url;
   if (persist) {
     try {
