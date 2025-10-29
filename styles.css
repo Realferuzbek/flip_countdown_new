@@ -71,25 +71,29 @@ body { background: #000; font-family: ui-sans-serif, system-ui, -apple-system, S
 .flip .top, .flip .bottom { display: none !important; }
 
 .colon {
+  position: relative;
   width: clamp(28px, 7vw, 88px);
   height: clamp(64px, 16vw, 180px);
   display: flex;
-  flex-direction: column;
-  justify-content: space-between;
   align-items: center;
-  padding: clamp(6px, 1.3vw, 18px) 0;
+  justify-content: center;
+  padding: 0;
   text-indent: -9999px;
   color: #fff;
 }
 .colon::before,
 .colon::after{
   content: "";
-  display: block;
+  position: absolute;
+  left: 50%;
   width: clamp(12px, 2.6vw, 22px);
   height: clamp(12px, 2.6vw, 22px);
   background: currentColor;
   border-radius: 50%;
+  transform: translateX(-50%);
 }
+.colon::before{ top: 32%; }
+.colon::after{ bottom: 32%; }
 
 /* Time input overlay */
 .time-input {
@@ -196,6 +200,9 @@ body { background: #000; font-family: ui-sans-serif, system-ui, -apple-system, S
 .fab svg {
   width: clamp(24px, 3.2vw, 30px);
   height: clamp(24px, 3.2vw, 30px);
+}
+.fab--alarm[hidden]{
+  display: none !important;
 }
 .fab--alarm {
   background: linear-gradient(140deg, rgba(255,255,255,0.92), rgba(200,208,255,0.88));
