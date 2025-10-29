@@ -25,6 +25,7 @@ const MODE_CONFIG = {
 };
 let totalSeconds = 0;
 let timer = null;           // setInterval handle
+let targetTimestamp = null;
 let alarmPlaying = false;
 let compactMode = false;
 let activeMode = 'pomodoro';
@@ -543,6 +544,7 @@ function start() {
     refreshControls();
     return;
   }
+  targetTimestamp = Date.now() + totalSeconds * 1000;
   timer = setInterval(tick, 1000);
   refreshControls();
 }
@@ -552,6 +554,11 @@ function pause(options = {}) {
     clearInterval(timer);
     timer = null;
   }
+  if (targetTimestamp !== null) {
+    const remainingMs = Math.max(0, targetTimestamp - Date.now());
+    totalSeconds = Math.ceil(remainingMs / 1000);
+    targetTimestamp = null;
+  }
   if (refresh) refreshControls();
 }
 function reset() {
@@ -559,15 +566,22 @@ function reset() {
   stopAlarm(true);
   const preset = MODE_CONFIG[activeMode]?.seconds ?? 0;
   totalSeconds = preset;
+  targetTimestamp = null;
   render();
   refreshControls();
 }
 function tick() {
-  totalSeconds = Math.max(0, totalSeconds - 1);
+  if (targetTimestamp !== null) {
+    const remainingMs = Math.max(0, targetTimestamp - Date.now());
+    totalSeconds = Math.ceil(remainingMs / 1000);
+  } else {
+    totalSeconds = Math.max(0, totalSeconds - 1);
+  }
   render();
   if (totalSeconds <= 0) {
     pause({ refresh: false });
     playAlarm();
+    targetTimestamp = null;
   }
   refreshControls();
 }
