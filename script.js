@@ -902,6 +902,7 @@ function pause(options = {}) {
     countdownDeadline = null;
   }
   clearScheduledTick();
+  stopAlarm(true);
   if (refresh) refreshControls();
 }
 function reset() {
