@@ -12,11 +12,161 @@ const TIMER_STORE_KEY = 'timer-presets';
 const TIMER_MIN_MINUTES = 1;
 const TIMER_MAX_MINUTES = 99;
 const THEME_NAME_MAP = Object.freeze({
-  'assets/backgrounds/background.jpg': 'Dark Mountain',
-  'assets/backgrounds/background_2.png': 'Midnight Clouds',
-  'assets/backgrounds/background_3.jpg': 'Grey Moon',
+  'assets/backgrounds/background.jpg': 'background.name.dark',
+  'assets/backgrounds/background_2.png': 'background.name.midnight',
+  'assets/backgrounds/background_3.jpg': 'background.name.grey',
 });
-const DEFAULT_THEME_NAME = 'New Background';
+const DEFAULT_THEME_KEY = 'background.name.new';
+const LANGUAGE_KEY = 'app-language';
+const SUPPORTED_LANGUAGES = ['en', 'uz', 'ru'];
+
+const TRANSLATIONS = {
+  en: {
+    'settings.title': 'Settings',
+    'tab.pomodoro': 'Pomodoro',
+    'tab.background': 'Background',
+    'tab.language': 'Language',
+    'pomodoro.title': 'Pomodoro',
+    'pomodoro.subtitle': 'Dial in focus and breaks for your perfect flow.',
+    'pomodoro.field.focus': 'Pomodoro',
+    'pomodoro.field.short': 'Short Break',
+    'pomodoro.field.long': 'Long Break',
+    'pomodoro.minutes': 'minutes',
+    'pomodoro.reset': 'Reset all',
+    'pomodoro.close': 'Close',
+    'pomodoro.save': 'Save changes',
+    'background.title': 'Select theme',
+    'background.subtitle': 'Tap a scene to refresh your focus space in seconds.',
+    'background.hint': 'Tap to apply',
+    'background.active': 'Active theme',
+    'background.name.dark': 'Dark Mountain',
+    'background.name.midnight': 'Midnight Clouds',
+    'background.name.grey': 'Grey Moon',
+    'background.name.new': 'New Background',
+    'background.use': 'Use background',
+    'language.title': 'Language',
+    'language.subtitle': 'Choose how the interface speaks to you.',
+    'language.option.en': 'English',
+    'language.option.uz': 'Uzbek',
+    'language.option.ru': 'Russian',
+    'language.hint': 'Applies instantly across the app.',
+    'language.groupLabel': 'Language',
+    'controls.start': 'start',
+    'controls.pause': 'pause',
+    'mode.pomodoro': 'pomodoro',
+    'mode.short': 'short break',
+    'mode.long': 'long break',
+    'time.editTitle': 'Click to set time (MM:SS). Press Enter to apply.',
+    'time.placeholder': 'MM:SS',
+    'fab.fullscreen': 'Fullscreen',
+    'fab.backgrounds': 'Backgrounds',
+    'fab.alarm': 'Stop alarm',
+    'common.close': 'Close',
+  },
+  uz: {
+    'settings.title': 'Sozlamalar',
+    'tab.pomodoro': 'Pomodoro',
+    'tab.background': 'Fon',
+    'tab.language': 'Til',
+    'pomodoro.title': 'Pomodoro',
+    'pomodoro.subtitle': 'Diqqat va tanaffuslarni o‘zingizga moslang.',
+    'pomodoro.field.focus': 'Pomodoro',
+    'pomodoro.field.short': 'Qisqa tanaffus',
+    'pomodoro.field.long': 'Uzoq tanaffus',
+    'pomodoro.minutes': 'daqiqalar',
+    'pomodoro.reset': 'Hammasini tiklash',
+    'pomodoro.close': 'Yopish',
+    'pomodoro.save': 'Saqlash',
+    'background.title': 'Fon tanlang',
+    'background.subtitle': 'Bir zumda kayfiyatni yangilash uchun sahnani bosing.',
+    'background.hint': 'Tanlash uchun bosing',
+    'background.active': 'Faol fon',
+    'background.name.dark': 'Qorong‘i Tog‘',
+    'background.name.midnight': 'Tungi Bulutlar',
+    'background.name.grey': 'Kulrang Oy',
+    'background.name.new': 'Yangi fon',
+    'background.use': 'Fon tanlash',
+    'language.title': 'Til',
+    'language.subtitle': 'Interfeys tilini tanlang.',
+    'language.option.en': 'Inglizcha',
+    'language.option.uz': 'O‘zbekcha',
+    'language.option.ru': 'Ruscha',
+    'language.hint': 'Butun ilova darhol yangilanadi.',
+    'language.groupLabel': 'Til',
+    'controls.start': 'boshlash',
+    'controls.pause': 'to‘xtatish',
+    'mode.pomodoro': 'pomodoro',
+    'mode.short': 'qisqa tanaffus',
+    'mode.long': 'uzoq tanaffus',
+    'time.editTitle': 'Vaqtni sozlash uchun bosing (MM:SS). Enter tugmasini bosing.',
+    'time.placeholder': 'MM:SS',
+    'fab.fullscreen': 'To‘liq ekran',
+    'fab.backgrounds': 'Fonlar',
+    'fab.alarm': 'Signalni o‘chirish',
+    'common.close': 'Yopish',
+  },
+  ru: {
+    'settings.title': 'Настройки',
+    'tab.pomodoro': 'Помодоро',
+    'tab.background': 'Фон',
+    'tab.language': 'Язык',
+    'pomodoro.title': 'Помодоро',
+    'pomodoro.subtitle': 'Настройте работу и перерывы под свой ритм.',
+    'pomodoro.field.focus': 'Помодоро',
+    'pomodoro.field.short': 'Короткий перерыв',
+    'pomodoro.field.long': 'Длинный перерыв',
+    'pomodoro.minutes': 'минуты',
+    'pomodoro.reset': 'Сбросить всё',
+    'pomodoro.close': 'Закрыть',
+    'pomodoro.save': 'Сохранить',
+    'background.title': 'Выберите фон',
+    'background.subtitle': 'Нажмите на сцену, чтобы обновить настроение за секунды.',
+    'background.hint': 'Нажмите, чтобы применить',
+    'background.active': 'Активный фон',
+    'background.name.dark': 'Тёмная гора',
+    'background.name.midnight': 'Ночные облака',
+    'background.name.grey': 'Серая луна',
+    'background.name.new': 'Новый фон',
+    'background.use': 'Использовать фон',
+    'language.title': 'Язык',
+    'language.subtitle': 'Выберите язык интерфейса.',
+    'language.option.en': 'Английский',
+    'language.option.uz': 'Узбекский',
+    'language.option.ru': 'Русский',
+    'language.hint': 'Применяется к приложению мгновенно.',
+    'language.groupLabel': 'Язык',
+    'controls.start': 'старт',
+    'controls.pause': 'пауза',
+    'mode.pomodoro': 'помодоро',
+    'mode.short': 'короткий перерыв',
+    'mode.long': 'длинный перерыв',
+    'time.editTitle': 'Нажмите, чтобы задать время (ММ:СС). Enter — применить.',
+    'time.placeholder': 'ММ:СС',
+    'fab.fullscreen': 'Полный экран',
+    'fab.backgrounds': 'Фоны',
+    'fab.alarm': 'Остановить сигнал',
+    'common.close': 'Закрыть',
+  },
+};
+
+let currentLanguage = loadLanguage();
+
+function loadLanguage() {
+  try {
+    const stored = localStorage.getItem(LANGUAGE_KEY);
+    if (stored && SUPPORTED_LANGUAGES.includes(stored)) {
+      return stored;
+    }
+  } catch (_) {}
+  return 'en';
+}
+
+function t(key) {
+  const table = TRANSLATIONS[currentLanguage] || TRANSLATIONS.en;
+  if (Object.prototype.hasOwnProperty.call(table, key)) return table[key];
+  if (Object.prototype.hasOwnProperty.call(TRANSLATIONS.en, key)) return TRANSLATIONS.en[key];
+  return key;
+}
 
 const MODE_CONFIG = {
   pomodoro: { label: 'pomodoro', seconds: DEFAULT_TIMER_MINUTES.pomodoro * 60 },
@@ -59,6 +209,12 @@ const timerInputs = {
 const timerSaveBtn = document.getElementById('pomodoro-save-btn');
 const timerResetBtn = document.getElementById('pomodoro-reset-btn');
 const alarmStopBtn = document.getElementById('fab-alarm-stop');
+const languageInputs = Array.from(document.querySelectorAll('input[name="language-option"]'));
+const MODE_LABEL_KEYS = {
+  pomodoro: 'mode.pomodoro',
+  short: 'mode.short',
+  long: 'mode.long',
+};
 
 function resolveBackgroundUrl(src) {
   if (!src) return '';
@@ -82,7 +238,7 @@ function normalizeBackgroundKey(url) {
 
 function themeNameFor(url) {
   const key = normalizeBackgroundKey(url);
-  return THEME_NAME_MAP[key] || DEFAULT_THEME_NAME;
+  return THEME_NAME_MAP[key] || DEFAULT_THEME_KEY;
 }
 
 function toggleAlarmStopButton(show) {
@@ -93,6 +249,82 @@ function toggleAlarmStopButton(show) {
   } else {
     alarmStopBtn.removeAttribute('tabindex');
   }
+}
+
+function updateElementI18n(el) {
+  if (!el || !el.dataset) return;
+  const key = el.dataset.i18n;
+  if (!key) return;
+  const text = t(key);
+  const attr = el.dataset.i18nAttr;
+  const attr2 = el.dataset.i18nAttr2;
+  if (attr) el.setAttribute(attr, text);
+  if (attr2) el.setAttribute(attr2, text);
+  if (!attr) {
+    el.textContent = text;
+  }
+}
+
+function refreshI18nText() {
+  document.querySelectorAll('[data-i18n]').forEach(updateElementI18n);
+  refreshThemeButtonTexts();
+  document.documentElement.lang = currentLanguage;
+}
+
+function updateThemeButtonText(btn) {
+  if (!btn) return;
+  const themeKey = btn.dataset.themeKey || DEFAULT_THEME_KEY;
+  const name = t(themeKey);
+  const nameEl = btn.querySelector('.theme-name');
+  if (nameEl) nameEl.textContent = name;
+  const hintEl = btn.querySelector('.theme-hint');
+  if (hintEl) hintEl.textContent = t('background.hint');
+  const stateEl = btn.querySelector('.theme-state');
+  if (stateEl) {
+    const active = btn.classList.contains('is-active');
+    stateEl.textContent = active ? t('background.active') : '';
+    stateEl.hidden = !active;
+  }
+  const img = btn.querySelector('img');
+  if (img) img.alt = `${name} preview`;
+  btn.setAttribute('aria-label', `${t('background.use')} ${name}`);
+  btn.setAttribute('title', `${t('background.use')} ${name}`);
+}
+
+function refreshThemeButtonTexts() {
+  document.querySelectorAll('.theme-options .thumb').forEach(updateThemeButtonText);
+}
+
+function applyLanguage(lang, { persist = true } = {}) {
+  if (!SUPPORTED_LANGUAGES.includes(lang)) {
+    lang = 'en';
+  }
+  currentLanguage = lang;
+  if (persist) {
+    try {
+      localStorage.setItem(LANGUAGE_KEY, lang);
+    } catch (_) {}
+  }
+  if (languageInputs.length) {
+    languageInputs.forEach((input) => {
+      input.checked = (input.value === lang);
+    });
+  }
+  refreshI18nText();
+  syncModeButtons();
+  refreshControls();
+}
+
+function initLanguageControls() {
+  if (!languageInputs.length) return;
+  languageInputs.forEach((input) => {
+    input.checked = (input.value === currentLanguage);
+    input.addEventListener('change', () => {
+      if (input.checked) {
+        applyLanguage(input.value);
+      }
+    });
+  });
 }
 
 function applyBackground(url, { persist = true } = {}) {
@@ -131,12 +363,18 @@ function syncThumbSelection(grid, url) {
     const isActive = btn.dataset.bgOption === url;
     btn.classList.toggle('is-active', isActive);
     btn.setAttribute('aria-pressed', String(isActive));
+    updateThemeButtonText(btn);
   });
 }
 
 function syncModeButtons(mode = activeMode) {
   modeButtons.forEach((btn) => {
-    const isActive = btn.dataset.mode === mode;
+    const modeKey = btn.dataset.mode;
+    const labelKey = MODE_LABEL_KEYS[modeKey];
+    if (labelKey) {
+      btn.textContent = t(labelKey);
+    }
+    const isActive = modeKey === mode;
     btn.classList.toggle('is-active', isActive);
     btn.setAttribute('aria-pressed', String(isActive));
   });
@@ -227,9 +465,12 @@ function loadTimerPresets() {
 function refreshControls() {
   const running = (targetTimestamp !== null);
   if (startBtn) {
-    startBtn.textContent = running ? 'pause' : 'start';
+    const labelKey = running ? 'controls.pause' : 'controls.start';
+    const label = t(labelKey);
+    startBtn.textContent = label;
     startBtn.classList.toggle('is-running', running);
     startBtn.setAttribute('aria-pressed', running ? 'true' : 'false');
+    startBtn.setAttribute('aria-label', label);
     startBtn.disabled = (!running && totalSeconds <= 0);
   }
   if (resetBtn) {
@@ -376,11 +617,17 @@ async function initAppearance() {
       btn.className = 'thumb';
       btn.type = 'button';
       btn.dataset.bgOption = url;
-      const themeLabel = themeNameFor(url);
-      btn.dataset.themeName = themeLabel;
-      btn.setAttribute('aria-label', `Use the ${themeLabel} background`);
+      const themeKey = themeNameFor(url);
+      btn.dataset.themeKey = themeKey;
       btn.setAttribute('role', 'listitem');
-      btn.innerHTML = `<img loading="lazy" decoding="async" src="${url}" alt="${themeLabel} preview">`;
+      btn.innerHTML = `
+        <img loading="lazy" decoding="async" src="${url}" alt="">
+        <div class="theme-copy">
+          <span class="theme-name"></span>
+          <span class="theme-hint"></span>
+          <span class="theme-state" hidden></span>
+        </div>
+      `;
       btn.addEventListener('click', () => {
         applyBackground(url);
         syncThumbSelection(grid, url);
@@ -389,6 +636,7 @@ async function initAppearance() {
       grid.appendChild(btn);
     });
 
+    refreshThemeButtonTexts();
     syncThumbSelection(grid, appliedBackground);
 
     bgBtn.hidden = false;
@@ -519,6 +767,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.error('Failed to initialize appearance controls:', err);
   }
   initTimerSettings();
+  initLanguageControls();
+  applyLanguage(currentLanguage, { persist: false });
   render();
   refreshControls();
 });
@@ -707,3 +957,7 @@ window.addEventListener('keydown', (e) => {
     return;
   }
 });
+
+
+
+
