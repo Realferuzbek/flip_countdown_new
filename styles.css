@@ -1485,3 +1485,122 @@ body.sheet-open { overflow: hidden; }
     --digit-max: 7rem;
   }
 }
+
+/* ====== 1) Ensure the colon is the same size as digits ====== */
+.time-wrap .colon {
+  font-size: 8rem;
+  line-height: 1;
+}
+@media (max-width: 750px) {
+  .time-wrap .colon {
+    font-size: 7rem;
+  }
+}
+
+/* ====== 2) Tighten vertical spacing between digits and buttons ====== */
+.time-wrap {
+  margin-bottom: 1.75rem;  /* desktop gap under the digits */
+}
+@media (max-width: 750px) {
+  .time-wrap {
+    margin-bottom: 1.25rem; /* mobile gap under the digits */
+  }
+}
+
+/* ====== 3) Keep the control row tidy and centered ====== */
+.controls {
+  align-items: center;  /* keep icons vertically centered */
+  gap: 18px;            /* space between start / reset / settings */
+}
+
+/* === Reference sizing overrides === */
+.time-wrap {
+  --digit-min: 8rem;
+  --digit-fluid: 8rem;
+  --digit-max: 8rem;
+  --colon-min: 8rem;
+  --colon-fluid: 8rem;
+  --colon-max: 8rem;
+  align-items: baseline;
+  justify-content: center;
+  margin-bottom: 1.75rem;
+}
+.time-wrap .flip::before,
+.time-wrap .flip::after {
+  font-size: clamp(var(--digit-min), var(--digit-fluid), var(--digit-max));
+  line-height: 1;
+  letter-spacing: normal;
+}
+.time-wrap .colon {
+  width: auto;
+  height: auto;
+  font-size: clamp(var(--colon-min), var(--colon-fluid), var(--colon-max));
+  line-height: 1;
+  margin-inline: 0.6rem;
+  align-self: baseline;
+  transform: none;
+}
+.mode-toggle {
+  justify-content: center;
+  gap: 18px;
+  margin-bottom: 2.25rem;
+}
+.mode-btn {
+  font-size: 1.5rem;
+  padding: 0.5rem 1rem;
+}
+.controls {
+  justify-content: center;
+  align-items: center;
+  gap: 18px;
+}
+.control-btn--primary {
+  min-height: 62px;
+  min-width: 130px;
+  padding: 0.5rem 1.75rem;
+  font-size: 1.5rem;
+  border-radius: 42px;
+}
+.control-btn--icon {
+  width: 3.25rem;
+  height: 3.25rem;
+  min-width: 3.25rem;
+  min-height: 3.25rem;
+  border-radius: 50%;
+}
+.control-btn--icon svg {
+  width: 2.25rem;
+  height: 2.25rem;
+}
+
+@media (max-width: 750px) {
+  .time-wrap {
+    --digit-min: 7rem;
+    --digit-fluid: 7rem;
+    --digit-max: 7rem;
+    --colon-min: 7rem;
+    --colon-fluid: 7rem;
+    --colon-max: 7rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .mode-toggle {
+    gap: 18px;
+  }
+
+  .control-btn--icon {
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    min-height: 42px;
+  }
+}
+
+@media (max-width: 350px) {
+  .control-btn--icon {
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    min-height: 38px;
+  }
+}
