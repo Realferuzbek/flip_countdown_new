@@ -252,6 +252,20 @@ function toggleAlarmStopButton(show) {
   }
 }
 
+function handleAlarmSilentStop() {
+  if (!alarm) return;
+  const alarmInactive = alarm.paused || alarm.ended || alarm.currentTime === 0;
+  const buttonVisible = !!alarmStopBtn && !alarmStopBtn.hidden;
+  if (!alarmInactive) return;
+  if (!alarmPlaying && !buttonVisible) return;
+
+  alarmPlaying = false;
+  try {
+    alarm.currentTime = 0;
+  } catch (_) {}
+  toggleAlarmStopButton(false);
+}
+
 function updateElementI18n(el) {
   if (!el || !el.dataset) return;
   const key = el.dataset.i18n;
@@ -701,6 +715,11 @@ function loadBundledAssets() {
       stopAlarm(true);
     });
     alarmStopBtn.dataset.bound = 'true';
+  }
+  if (alarm && !alarm.dataset.boundPauseListener) {
+    alarm.addEventListener('pause', handleAlarmSilentStop);
+    alarm.addEventListener('ended', handleAlarmSilentStop);
+    alarm.dataset.boundPauseListener = 'true';
   }
   toggleAlarmStopButton(false);
 }
