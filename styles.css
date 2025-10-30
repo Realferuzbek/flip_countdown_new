@@ -17,7 +17,7 @@ body { background: #000; font-family: ui-sans-serif, system-ui, -apple-system, S
 .content {
   position: relative; z-index: 1; height: 100%;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: clamp(14px, 2.8vh, 30px); padding: clamp(24px, 4.6vw, 60px); text-align: center;
+  gap: clamp(12px, 2.6vh, 28px); padding: clamp(24px, 4.6vw, 60px); text-align: center;
 }
 
 .mode-toggle {
@@ -25,7 +25,7 @@ body { background: #000; font-family: ui-sans-serif, system-ui, -apple-system, S
   align-items: center;
   justify-content: center;
   gap: clamp(10px, 1.8vw, 18px);
-  margin-bottom: clamp(6px, 1.6vh, 14px);
+  margin-bottom: clamp(0px, 0.6vh, 8px);
 }
 .mode-btn {
   border: 1.5px solid rgba(255,255,255,0.55);
@@ -66,7 +66,7 @@ body { background: #000; font-family: ui-sans-serif, system-ui, -apple-system, S
 }
 
 /* Timer row (clean digits, no tiles) */
-.time-wrap { display: flex; align-items: center; justify-content: center; gap: clamp(6px, 2.4vw, 16px); margin: 0 auto; font-variant-numeric: tabular-nums; }
+.time-wrap { display: flex; align-items: center; justify-content: center; gap: clamp(8px, 1.4vmin, 14px); margin: 0 auto; font-variant-numeric: tabular-nums; }
 .flip { position: relative; width: clamp(60px, 11vmin, 128px); height: clamp(84px, 18vmin, 176px); margin: 0; }
 .flip::before, .flip::after {
   content: attr(data-digit);
@@ -79,7 +79,7 @@ body { background: #000; font-family: ui-sans-serif, system-ui, -apple-system, S
 .flip .top, .flip .bottom { display: none !important; }
 
 .colon {
-  width: clamp(22px, 5.4vmin, 60px);
+  width: clamp(18px, 2.6vmin, 36px);
   height: clamp(84px, 18vmin, 176px);
   display: flex;
   align-items: center;
@@ -107,7 +107,7 @@ body { background: #000; font-family: ui-sans-serif, system-ui, -apple-system, S
   align-items: center;
   justify-content: center;
   gap: clamp(12px, 3vw, 24px);
-  margin-top: clamp(8px, 1.8vh, 18px);
+  margin-top: clamp(0px, 0.6vh, 8px);
 }
 .control-btn {
   border: none;
@@ -315,7 +315,7 @@ body.sheet-open { overflow: hidden; }
 /* Guardrail overrides */
 .mode-toggle {
   gap: clamp(10px, 1.8vw, 18px);
-  margin-bottom: clamp(6px, 1.6vh, 14px);
+  margin-bottom: clamp(0px, 0.6vh, 8px);
 }
 
 .mode-btn {
@@ -360,7 +360,7 @@ body.sheet-open { overflow: hidden; }
 }
 
 .time-wrap {
-  gap: clamp(10px, 3vw, 20px);
+  gap: clamp(8px, 1.4vmin, 14px);
 }
 
 .flip::before,
@@ -370,7 +370,7 @@ body.sheet-open { overflow: hidden; }
 }
 
 .colon {
-  width: clamp(28px, 7vw, 88px);
+  width: clamp(18px, 2.6vmin, 36px);
   font-size: clamp(48px, 15vw, 176px);
 }
 
@@ -500,7 +500,7 @@ body.sheet-open { overflow: hidden; }
 /* ===================== Timer sizing (fluid, no overflow) =============== */
 .time-wrap, .timer, .time, .display{
   display: flex; align-items: baseline; justify-content: center;
-  gap: clamp(6px, 2.4vw, 16px);
+  gap: clamp(8px, 1.4vmin, 14px);
 }
 .flip::before, .flip::after{
   /* your digits */
@@ -511,7 +511,7 @@ body.sheet-open { overflow: hidden; }
   font-variant-numeric: tabular-nums;
 }
 .colon{
-  width: auto;
+  width: clamp(18px, 2.6vmin, 36px);
   font-size: clamp(var(--colon-min), var(--colon-fluid), var(--colon-max));
   line-height: .9;
 }
@@ -519,7 +519,7 @@ body.sheet-open { overflow: hidden; }
 /* ===================== Buttons row ===================================== */
 .controls, .control-row{
   display:flex; gap: var(--space-3); justify-content:center; align-items:center;
-  margin-top: var(--space-3);
+  margin-top: clamp(0px, 0.6vh, 8px);
 }
 .control-btn--primary{
   min-height: 62px;
@@ -1344,7 +1344,7 @@ body.sheet-open { overflow: hidden; }
 }
 
 .time-wrap {
-  gap: 1.1rem;
+  gap: clamp(8px, 1.4vmin, 14px);
   font-variant-numeric: tabular-nums;
 }
 
@@ -1366,7 +1366,7 @@ body.sheet-open { overflow: hidden; }
   font-size: var(--pomodoro-digit-lg);
   font-weight: 600;
   line-height: 1;
-  width: auto;
+  width: clamp(18px, 2.6vmin, 36px);
   margin-inline: 0.125rem;
 }
 
@@ -1532,7 +1532,7 @@ body.sheet-open { overflow: hidden; }
   letter-spacing: normal;
 }
 .time-wrap .colon {
-  width: auto;
+  width: clamp(18px, 2.6vmin, 36px);
   height: auto;
   font-size: clamp(var(--colon-min), var(--colon-fluid), var(--colon-max));
   line-height: 1;
@@ -1543,7 +1543,7 @@ body.sheet-open { overflow: hidden; }
 .mode-toggle {
   justify-content: center;
   gap: 16px;
-  margin-bottom: 1.2rem;
+  margin-bottom: clamp(0px, 0.6vh, 8px);
 }
 .mode-btn {
   font-size: 1.5rem;
