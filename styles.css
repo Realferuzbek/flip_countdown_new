@@ -1607,14 +1607,15 @@ body.sheet-open { overflow: hidden; }
 
 /* === Background brightness override === */
 .bg::before {
-  background: transparent;
+  background: none !important;
+  opacity: 0;
 }
 
 :root {
-  --bg-overlay: transparent;
+  --bg-overlay: transparent !important;
 }
 
 body,
 .bg {
-  background-color: transparent;
+  background: transparent !important;
 }
