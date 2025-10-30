@@ -29,14 +29,14 @@ body { background: #000; font-family: ui-sans-serif, system-ui, -apple-system, S
 }
 .mode-btn {
   border: 1.5px solid rgba(255,255,255,0.55);
-  border-radius: 999px;
+  border-radius: 9999px;
   /* transparent/glassy surface that adapts to BG */
   background: rgba(255,255,255,0.08);
   backdrop-filter: blur(6px) saturate(110%);
   -webkit-backdrop-filter: blur(6px) saturate(110%);
   color: rgba(255,255,255,0.9);
-  padding: clamp(10px, 1.8vw, 16px) clamp(24px, 5vw, 40px);
-  font-size: clamp(14px, 1.6vw, 18px);
+  padding: 0.5rem 1rem;
+  font-size: 1.5rem;
   font-weight: 600;
   letter-spacing: 0.03em;
   text-transform: lowercase;
@@ -131,7 +131,11 @@ body { background: #000; font-family: ui-sans-serif, system-ui, -apple-system, S
   transform: translateY(-2px);
 }
 .control-btn--primary {
-  padding: clamp(12px, 2.0vw, 18px) clamp(40px, 6.8vw, 64px);
+  min-height: 62px;
+  min-width: 130px;
+  padding: 0.5rem 1.75rem;
+  font-size: 1.5rem;
+  border-radius: 42px;
   background: rgba(255,255,255,0.92);
   color: #161616;
   box-shadow: 0 18px 36px rgba(0,0,0,0.28);
@@ -141,8 +145,10 @@ body { background: #000; font-family: ui-sans-serif, system-ui, -apple-system, S
   box-shadow: 0 12px 24px rgba(0,0,0,0.22);
 }
 .control-btn--icon {
-  width: clamp(52px, 8vw, 58px);
-  height: clamp(52px, 8vw, 58px);
+  width: 3.25rem;
+  height: 3.25rem;
+  min-width: 3.25rem;
+  min-height: 3.25rem;
   border-radius: 50%;
   background: rgba(0,0,0,0.55);
   border: 1.5px solid rgba(255,255,255,0.40);
@@ -297,7 +303,7 @@ body.sheet-open { overflow: hidden; }
     gap: 14px;
   }
   .control-btn--primary {
-    padding: 12px 34px;
+    padding: 0.5rem 1.75rem;
   }
 }
 
@@ -314,13 +320,13 @@ body.sheet-open { overflow: hidden; }
 
 .mode-btn {
   border: 1.5px solid rgba(255,255,255,0.55);
-  border-radius: 999px;
+  border-radius: 9999px;
   background: rgba(255,255,255,0.08);
   backdrop-filter: blur(6px) saturate(110%);
   -webkit-backdrop-filter: blur(6px) saturate(110%);
   color: rgba(255,255,255,0.9);
-  padding: clamp(10px, 1.8vw, 16px) clamp(24px, 5vw, 40px);
-  font-size: clamp(14px, 1.6vw, 18px);
+  padding: 0.5rem 1rem;
+  font-size: 1.5rem;
   font-weight: 600;
   letter-spacing: 0.03em;
   text-transform: lowercase;
@@ -369,15 +375,21 @@ body.sheet-open { overflow: hidden; }
 }
 
 .control-btn--primary {
-  padding: clamp(12px, 2.0vw, 18px) clamp(40px, 6.8vw, 64px);
+  min-height: 62px;
+  min-width: 130px;
+  padding: 0.5rem 1.75rem;
+  font-size: 1.5rem;
+  border-radius: 42px;
   background: rgba(255,255,255,0.92);
   color: #161616;
   box-shadow: 0 18px 36px rgba(0,0,0,0.28);
 }
 
 .control-btn--icon {
-  width: clamp(52px, 8vw, 58px);
-  height: clamp(52px, 8vw, 58px);
+  width: 3.25rem;
+  height: 3.25rem;
+  min-width: 3.25rem;
+  min-height: 3.25rem;
   border-radius: 50%;
   background: rgba(0,0,0,0.55);
   border: 1.5px solid rgba(255,255,255,0.40);
@@ -404,7 +416,7 @@ body.sheet-open { overflow: hidden; }
     gap: 14px;
   }
   .control-btn--primary {
-    padding: 12px 34px;
+    padding: 0.5rem 1.75rem;
   }
 }
 
@@ -461,13 +473,13 @@ body.sheet-open { overflow: hidden; }
 .mode-btn{
   border: var(--ring);
   border-color: var(--glass-border);
-  border-radius: var(--pill-radius);
+  border-radius: 9999px;
   background: var(--glass-bg);
   backdrop-filter: blur(6px) saturate(110%);
   -webkit-backdrop-filter: blur(6px) saturate(110%);
   color: rgba(255,255,255,.92);
-  padding: var(--pill-pad-y) var(--pill-pad-x);
-  font-size: clamp(14px, 1.3vw, 17px);
+  padding: 0.5rem 1rem;
+  font-size: 1.5rem;
   font-weight: 600;
   letter-spacing: .02em;
   text-transform: lowercase;
@@ -510,18 +522,21 @@ body.sheet-open { overflow: hidden; }
   margin-top: var(--space-3);
 }
 .control-btn--primary{
-  padding: var(--primary-pad-y) var(--primary-pad-x);
+  min-height: 62px;
+  min-width: 130px;
+  padding: 0.5rem 1.75rem;
+  font-size: 1.5rem;
   background: rgba(255,255,255,.92);
   color:#161616; border: none;
-  border-radius: 999px;
+  border-radius: 42px;
   box-shadow: 0 18px 36px rgba(0,0,0,.28);
   font-weight:700;
-  font-size: clamp(16px, 1.6vw, 20px);
   letter-spacing: .03em;
   line-height: 1.1;
 }
 .control-btn--icon{
-  width: var(--icon-diam); height: var(--icon-diam);
+  width: 3.25rem; height: 3.25rem;
+  min-width: 3.25rem; min-height: 3.25rem;
   border-radius: 50%;
   display: inline-grid; place-items: center;
   background: rgba(0,0,0,.55);
@@ -1304,7 +1319,7 @@ body.sheet-open { overflow: hidden; }
   font-weight: 600;
   padding: 0.5rem 1rem;
   min-height: 40px;
-  border-radius: 999px;
+  border-radius: 9999px;
   border: 1px solid rgba(255,255,255,0.78);
   background: rgba(0,0,0,0.35);
   color: #fff;
@@ -1391,6 +1406,8 @@ body.sheet-open { overflow: hidden; }
 .control-btn--icon {
   width: 3.25rem;
   height: 3.25rem;
+  min-width: 3.25rem;
+  min-height: 3.25rem;
   border-radius: 50%;
   border: 1px solid #fff;
   background: rgba(0,0,0,0.45);
@@ -1416,8 +1433,8 @@ body.sheet-open { overflow: hidden; }
 
 @media (max-width: 750px) {
   .mode-btn {
-    font-size: 1.3rem;
-    padding-inline: 0.9rem;
+    font-size: 1.5rem;
+    padding: 0.5rem 1rem;
   }
 
   .flip::before,
@@ -1429,6 +1446,8 @@ body.sheet-open { overflow: hidden; }
   .control-btn--icon {
     width: 42px;
     height: 42px;
+    min-width: 42px;
+    min-height: 42px;
   }
 
   .control-btn--icon svg {
@@ -1441,10 +1460,28 @@ body.sheet-open { overflow: hidden; }
   .control-btn--icon {
     width: 38px;
     height: 38px;
+    min-width: 38px;
+    min-height: 38px;
   }
 
   .control-btn--icon svg {
     width: 32px;
     height: 32px;
+  }
+}
+
+/* === Pomodoro desktop sizing override === */
+.time-wrap {
+  --digit-min: 8rem;
+  --digit-fluid: 8rem;
+  --digit-max: 8rem;
+}
+
+/* smaller screens — match the reference 7rem */
+@media (max-width: 750px) {
+  .time-wrap {
+    --digit-min: 7rem;
+    --digit-fluid: 7rem;
+    --digit-max: 7rem;
   }
 }
