@@ -1604,3 +1604,8 @@ body.sheet-open { overflow: hidden; }
     min-height: 38px;
   }
 }
+
+/* === Background brightness override === */
+.bg::before {
+  background: transparent;
+}
