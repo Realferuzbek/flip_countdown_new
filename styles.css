@@ -1,11 +1,19 @@
-:root { --fg: #ffffff; --shadow: rgba(0,0,0,0.35); }
+:root { --fg: #ffffff; --shadow: rgba(0,0,0,0.35); --bg-overlay: rgba(0,0,0,0.32); }
 * { box-sizing: border-box; }
 html, body { height: 100%; margin: 0; }
 body { background: #000; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial; color: var(--fg); }
 
 /* Layout */
 .app { position: relative; height: 100vh; overflow: hidden; }
-.bg { position: absolute; inset: 0; z-index: 0; background: #000; } /* JS sets the image */
+.bg { position: absolute; inset: 0; z-index: 0; background: #000; pointer-events: none; }
+.bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--bg-overlay);
+  pointer-events: none;
+  transition: background 220ms ease;
+}
 .content {
   position: relative; z-index: 1; height: 100%;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -1280,5 +1288,163 @@ body.sheet-open { overflow: hidden; }
   .theme-options .thumb img{
     width: 78px;
     height: 56px;
+  }
+}
+
+/* === Pomodoro aesthetic alignment === */
+:root {
+  --pomodoro-font: "Space Grotesk", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --pomodoro-digit-lg: 8rem;
+  --pomodoro-digit-sm: 7rem;
+}
+
+.mode-btn {
+  font-family: var(--pomodoro-font);
+  font-size: 1.5rem;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  min-height: 40px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.78);
+  background: rgba(0,0,0,0.35);
+  color: #fff;
+  letter-spacing: 0.02em;
+  text-transform: lowercase;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  transition: background 175ms ease, color 175ms ease, border-color 175ms ease, transform 175ms ease;
+}
+
+.mode-btn:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255,255,255,0.92);
+  background: rgba(255,255,255,0.16);
+}
+
+.mode-btn.is-active {
+  background: #fff;
+  color: #111;
+  border-color: #fff;
+  box-shadow: 0 14px 28px rgba(0,0,0,0.2);
+}
+
+.time-wrap {
+  gap: 1.1rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.flip {
+  min-width: 6.25rem;
+}
+
+.flip::before,
+.flip::after {
+  font-family: var(--pomodoro-font);
+  font-size: var(--pomodoro-digit-lg);
+  font-weight: 600;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.colon {
+  font-family: var(--pomodoro-font);
+  font-size: var(--pomodoro-digit-lg);
+  font-weight: 600;
+  line-height: 1;
+  width: auto;
+  margin-inline: 0.125rem;
+}
+
+.controls {
+  gap: 1.2rem;
+}
+
+.control-btn {
+  font-family: var(--pomodoro-font);
+  letter-spacing: 0.01em;
+}
+
+.control-btn--primary {
+  min-height: 62px;
+  min-width: 130px;
+  padding: 0.5rem 1.75rem;
+  font-size: 1.5rem;
+  border: 1px solid #fff;
+  border-radius: 42px;
+  background: #fff;
+  color: #000;
+  box-shadow: 0 18px 36px rgba(0,0,0,0.24);
+  transition: transform 175ms ease, box-shadow 175ms ease, background 175ms ease, color 175ms ease;
+}
+
+.control-btn--primary:hover:not(:disabled),
+.control-btn--primary:focus-visible:not(:disabled) {
+  background: rgba(255,255,255,0.9);
+  box-shadow: 0 24px 44px rgba(0,0,0,0.3);
+}
+
+.control-btn--primary.is-running {
+  background: rgba(255,255,255,0.8);
+  color: #111;
+}
+
+.control-btn--icon {
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 50%;
+  border: 1px solid #fff;
+  background: rgba(0,0,0,0.45);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 16px 32px rgba(0,0,0,0.25);
+  transition: transform 175ms ease, background 175ms ease, border-color 175ms ease;
+}
+
+.control-btn--icon svg {
+  width: 2.25rem;
+  height: 2.25rem;
+}
+
+.control-btn--icon:hover:not(:disabled),
+.control-btn--icon:focus-visible:not(:disabled) {
+  background: rgba(255,255,255,0.12);
+  border-color: rgba(255,255,255,0.85);
+  transform: translateY(-2px);
+}
+
+@media (max-width: 750px) {
+  .mode-btn {
+    font-size: 1.3rem;
+    padding-inline: 0.9rem;
+  }
+
+  .flip::before,
+  .flip::after,
+  .colon {
+    font-size: var(--pomodoro-digit-sm);
+  }
+
+  .control-btn--icon {
+    width: 42px;
+    height: 42px;
+  }
+
+  .control-btn--icon svg {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+@media (max-width: 350px) {
+  .control-btn--icon {
+    width: 38px;
+    height: 38px;
+  }
+
+  .control-btn--icon svg {
+    width: 32px;
+    height: 32px;
   }
 }
