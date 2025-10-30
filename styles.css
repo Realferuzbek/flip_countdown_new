@@ -17,15 +17,15 @@ body { background: #000; font-family: ui-sans-serif, system-ui, -apple-system, S
 .content {
   position: relative; z-index: 1; height: 100%;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: clamp(24px, 5vh, 48px); padding: clamp(24px, 4.6vw, 60px); text-align: center;
+  gap: clamp(14px, 2.8vh, 30px); padding: clamp(24px, 4.6vw, 60px); text-align: center;
 }
 
 .mode-toggle {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: clamp(12px, 2.2vw, 22px);
-  margin-bottom: clamp(8px, 2vh, 18px);
+  gap: clamp(10px, 1.8vw, 18px);
+  margin-bottom: clamp(6px, 1.6vh, 14px);
 }
 .mode-btn {
   border: 1.5px solid rgba(255,255,255,0.55);
@@ -106,8 +106,8 @@ body { background: #000; font-family: ui-sans-serif, system-ui, -apple-system, S
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: clamp(16px, 4vw, 32px);
-  margin-top: clamp(12px, 2vh, 26px);
+  gap: clamp(12px, 3vw, 24px);
+  margin-top: clamp(8px, 1.8vh, 18px);
 }
 .control-btn {
   border: none;
@@ -314,8 +314,8 @@ body.sheet-open { overflow: hidden; }
 
 /* Guardrail overrides */
 .mode-toggle {
-  gap: clamp(12px, 2.2vw, 22px);
-  margin-bottom: clamp(8px, 2vh, 18px);
+  gap: clamp(10px, 1.8vw, 18px);
+  margin-bottom: clamp(6px, 1.6vh, 14px);
 }
 
 .mode-btn {
@@ -1499,18 +1499,18 @@ body.sheet-open { overflow: hidden; }
 
 /* ====== 2) Tighten vertical spacing between digits and buttons ====== */
 .time-wrap {
-  margin-bottom: 1.75rem;  /* desktop gap under the digits */
+  margin-bottom: 1.15rem;  /* desktop gap under the digits */
 }
 @media (max-width: 750px) {
   .time-wrap {
-    margin-bottom: 1.25rem; /* mobile gap under the digits */
+    margin-bottom: 0.85rem; /* mobile gap under the digits */
   }
 }
 
 /* ====== 3) Keep the control row tidy and centered ====== */
 .controls {
   align-items: center;  /* keep icons vertically centered */
-  gap: 18px;            /* space between start / reset / settings */
+  gap: 16px;            /* space between start / reset / settings */
 }
 
 /* === Reference sizing overrides === */
@@ -1523,7 +1523,7 @@ body.sheet-open { overflow: hidden; }
   --colon-max: 8rem;
   align-items: baseline;
   justify-content: center;
-  margin-bottom: 1.75rem;
+  margin-bottom: 1.15rem;
 }
 .time-wrap .flip::before,
 .time-wrap .flip::after {
@@ -1542,8 +1542,8 @@ body.sheet-open { overflow: hidden; }
 }
 .mode-toggle {
   justify-content: center;
-  gap: 18px;
-  margin-bottom: 2.25rem;
+  gap: 16px;
+  margin-bottom: 1.2rem;
 }
 .mode-btn {
   font-size: 1.5rem;
@@ -1552,7 +1552,7 @@ body.sheet-open { overflow: hidden; }
 .controls {
   justify-content: center;
   align-items: center;
-  gap: 18px;
+  gap: 16px;
 }
 .control-btn--primary {
   min-height: 62px;
@@ -1581,11 +1581,11 @@ body.sheet-open { overflow: hidden; }
     --colon-min: 7rem;
     --colon-fluid: 7rem;
     --colon-max: 7rem;
-    margin-bottom: 1.25rem;
+    margin-bottom: 0.85rem;
   }
 
   .mode-toggle {
-    gap: 18px;
+    gap: 14px;
   }
 
   .control-btn--icon {
