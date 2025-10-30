@@ -175,10 +175,11 @@ const MODE_CONFIG = {
 };
 let totalSeconds = 0;
 let tickHandle = null;
-let targetTimestamp = null;
+let countdownDeadline = null;
 let alarmPlaying = false;
 let compactMode = false;
 let activeMode = 'pomodoro';
+const supportsPerformanceNow = typeof performance !== 'undefined' && typeof performance.now === 'function';
 
 // === Background + Fullscreen wiring ===
 const BG_STORE_KEY = 'bg-url';
@@ -463,7 +464,7 @@ function loadTimerPresets() {
 }
 
 function refreshControls() {
-  const running = (targetTimestamp !== null);
+  const running = isRunning();
   if (startBtn) {
     const labelKey = running ? 'controls.pause' : 'controls.start';
     const label = t(labelKey);
@@ -716,7 +717,7 @@ function initModeControls() {
 
   if (startBtn) {
     startBtn.addEventListener('click', () => {
-      if (targetTimestamp !== null) {
+      if (isRunning()) {
         pause();
       } else {
         start();
@@ -774,7 +775,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 document.addEventListener('visibilitychange', () => {
-  if (!document.hidden && targetTimestamp !== null) {
+  if (!document.hidden && isRunning()) {
     scheduleTick(true);
   }
 });
@@ -811,6 +812,41 @@ function isSheetOpen() {
   return Boolean(sheet && !sheet.hidden);
 }
 
+function createDeadline(seconds) {
+  const normalizedSeconds = Number.isFinite(seconds) ? seconds : Number(seconds);
+  const safeSeconds = Number.isFinite(normalizedSeconds) ? normalizedSeconds : 0;
+  const ms = Math.max(0, safeSeconds * 1000);
+  const wall = Date.now() + ms;
+  const steadyBase = supportsPerformanceNow ? performance.now() : null;
+  const steady = typeof steadyBase === 'number' ? steadyBase + ms : null;
+  return { wall, steady };
+}
+
+function getRemainingMs(deadline = countdownDeadline) {
+  if (!deadline) return 0;
+  let wallRemaining = deadline.wall - Date.now();
+  wallRemaining = Number.isFinite(wallRemaining) ? wallRemaining : Number.POSITIVE_INFINITY;
+
+  let steadyRemaining = Number.POSITIVE_INFINITY;
+  if (supportsPerformanceNow && typeof deadline.steady === 'number') {
+    steadyRemaining = deadline.steady - performance.now();
+    steadyRemaining = Number.isFinite(steadyRemaining) ? steadyRemaining : Number.POSITIVE_INFINITY;
+  }
+
+  let remaining = Math.min(wallRemaining, steadyRemaining);
+  if (!Number.isFinite(remaining)) {
+    remaining = Number.isFinite(wallRemaining) ? wallRemaining : steadyRemaining;
+  }
+  if (!Number.isFinite(remaining)) {
+    remaining = 0;
+  }
+  return Math.max(0, remaining);
+}
+
+function isRunning() {
+  return countdownDeadline !== null;
+}
+
 // ===== Timer helpers =====
 function clearScheduledTick() {
   if (tickHandle) {
@@ -821,7 +857,7 @@ function clearScheduledTick() {
 
 function scheduleTick(immediate = false) {
   clearScheduledTick();
-  if (targetTimestamp === null) return;
+  if (!isRunning()) return;
   if (immediate) {
     tick();
   } else {
@@ -831,20 +867,20 @@ function scheduleTick(immediate = false) {
 
 // ===== Timer (keeps accurate time even while unfocused) =====
 function start() {
-  if (totalSeconds <= 0 || targetTimestamp !== null) {
+  if (totalSeconds <= 0 || isRunning()) {
     refreshControls();
     return;
   }
-  targetTimestamp = Date.now() + totalSeconds * 1000;
+  countdownDeadline = createDeadline(totalSeconds);
   scheduleTick(true);
   refreshControls();
 }
 function pause(options = {}) {
   const { refresh = true } = options;
-  if (targetTimestamp !== null) {
-    const remainingMs = Math.max(0, targetTimestamp - Date.now());
-    totalSeconds = Math.ceil(remainingMs / 1000);
-    targetTimestamp = null;
+  if (isRunning()) {
+    const remainingMs = getRemainingMs();
+    totalSeconds = Math.max(0, Math.ceil(remainingMs / 1000));
+    countdownDeadline = null;
   }
   clearScheduledTick();
   if (refresh) refreshControls();
@@ -859,12 +895,12 @@ function reset() {
 }
 function tick() {
   tickHandle = null;
-  if (targetTimestamp === null) return;
-  const remainingMs = Math.max(0, targetTimestamp - Date.now());
-  totalSeconds = Math.ceil(remainingMs / 1000);
+  if (!isRunning()) return;
+  const remainingMs = getRemainingMs();
+  totalSeconds = Math.max(0, Math.ceil(remainingMs / 1000));
   render();
   if (totalSeconds <= 0) {
-    targetTimestamp = null;
+    countdownDeadline = null;
     clearScheduledTick();
     refreshControls();
     playAlarm();
@@ -945,7 +981,7 @@ window.addEventListener('keydown', (e) => {
     (document.activeElement === timeInput && timeInput.classList.contains('active'));
   if (editing) return;
 
-  if (e.code === 'Space')        { e.preventDefault(); if (targetTimestamp !== null) pause(); else start(); return; }
+  if (e.code === 'Space')        { e.preventDefault(); if (isRunning()) pause(); else start(); return; }
   if (e.key === 'Escape')        { reset(); return; }
   if (e.key.toLowerCase() === 'j') {
     e.preventDefault();
