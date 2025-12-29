@@ -13,7 +13,6 @@ const TIMER_MIN_MINUTES = 1;
 const TIMER_MAX_MINUTES = 99;
 const THEME_NAME_MAP = Object.freeze({
   'assets/backgrounds/background.jpg': 'background.name.dark',
-  'assets/backgrounds/background_2.png': 'background.name.midnight',
   'assets/backgrounds/background_3.jpg': 'background.name.grey',
 });
 const DEFAULT_THEME_KEY = 'background.name.new';
@@ -177,6 +176,10 @@ let totalSeconds = 0;
 let tickHandle = null;
 let countdownDeadline = null;
 let alarmPlaying = false;
+let alarmCanPlay = false;
+let alarmDisarmed = false;
+let alarmDisarming = false;
+let alarmSoundUrl = '';
 let compactMode = false;
 let activeMode = 'pomodoro';
 const supportsPerformanceNow = typeof performance !== 'undefined' && typeof performance.now === 'function';
@@ -184,7 +187,7 @@ const supportsPerformanceNow = typeof performance !== 'undefined' && typeof perf
 // === Background + Fullscreen wiring ===
 const BG_STORE_KEY = 'bg-url';
 const BG_LEGACY_KEY = 'bg:src';
-const DEFAULT_BG = 'assets/backgrounds/background_2.png';
+const DEFAULT_BG = 'assets/backgrounds/background.jpg';
 const $ = (sel) => document.querySelector(sel);
 
 function currentBg() {
@@ -252,18 +255,32 @@ function toggleAlarmStopButton(show) {
   }
 }
 
-function handleAlarmSilentStop() {
+function armAlarm() {
   if (!alarm) return;
-  const alarmInactive = alarm.paused || alarm.ended || alarm.currentTime === 0;
-  const buttonVisible = !!alarmStopBtn && !alarmStopBtn.hidden;
-  if (!alarmInactive) return;
-  if (!alarmPlaying && !buttonVisible) return;
+  alarmDisarmed = false;
+  alarmCanPlay = false;
+  if (!alarm.getAttribute('src') && alarmSoundUrl) {
+    alarm.src = alarmSoundUrl;
+    alarm.load();
+  }
+}
 
-  alarmPlaying = false;
-  try {
-    alarm.currentTime = 0;
-  } catch (_) {}
-  toggleAlarmStopButton(false);
+function handleAlarmPauseOrEnded() {
+  if (alarmCanPlay && !alarmDisarming) {
+    stopAlarm({ disarm: true });
+  }
+}
+
+function handleAlarmPlay() {
+  if (!alarmCanPlay) {
+    stopAlarm({ disarm: false });
+  }
+}
+
+function handleAlarmPlaying() {
+  if (!alarmCanPlay) return;
+  alarmPlaying = true;
+  toggleAlarmStopButton(true);
 }
 
 function updateElementI18n(el) {
@@ -451,6 +468,7 @@ function applyTimerMinutes(minutes, { persist = true, resetTimer = true } = {}) 
   updateModeConfigFromMinutes(minutes);
   if (persist) persistTimerMinutes(minutes);
   syncTimerInputs(minutes);
+  armAlarm();
   if (resetTimer) {
     reset();
   } else {
@@ -503,10 +521,10 @@ function setActiveMode(mode, { resetToPreset = true } = {}) {
   syncModeButtons(mode);
   if (resetToPreset) {
     pause({ refresh: false });
-    stopAlarm(true);
     totalSeconds = MODE_CONFIG[mode].seconds;
     render();
   }
+  armAlarm();
   refreshControls();
 }
 
@@ -615,9 +633,10 @@ async function initAppearance() {
   const images = await loadImagesManifest();
   const saved = currentBg();
   const availableSet = new Set(images);
+  const preferredDefault = availableSet.has(DEFAULT_BG) ? DEFAULT_BG : images[0];
   const initial =
     (saved && availableSet.has(saved)) ? saved :
-    (images[0] || saved || DEFAULT_BG);
+    (preferredDefault || saved || DEFAULT_BG);
 
   applyBackground(initial, { persist: Boolean(images.length) });
 
@@ -707,19 +726,20 @@ function loadBundledAssets() {
     applyBackground(DEFAULT_BG, { persist: false });
   }
 
-  const alarmUrl = resolveBundled('./assets/alarm.mp3');
-  alarm.src = alarmUrl;
-  alarm.load();
+  alarmSoundUrl = resolveBundled('./assets/alarm.mp3');
+  armAlarm();
   if (alarmStopBtn && !alarmStopBtn.dataset.bound) {
     alarmStopBtn.addEventListener('click', () => {
-      stopAlarm(true);
+      stopAlarm({ disarm: true });
     });
     alarmStopBtn.dataset.bound = 'true';
   }
-  if (alarm && !alarm.dataset.boundPauseListener) {
-    alarm.addEventListener('pause', handleAlarmSilentStop);
-    alarm.addEventListener('ended', handleAlarmSilentStop);
-    alarm.dataset.boundPauseListener = 'true';
+  if (alarm && !alarm.dataset.boundMediaListeners) {
+    alarm.addEventListener('pause', handleAlarmPauseOrEnded);
+    alarm.addEventListener('ended', handleAlarmPauseOrEnded);
+    alarm.addEventListener('play', handleAlarmPlay);
+    alarm.addEventListener('playing', handleAlarmPlaying);
+    alarm.dataset.boundMediaListeners = 'true';
   }
   toggleAlarmStopButton(false);
 }
@@ -801,7 +821,7 @@ document.addEventListener('visibilitychange', () => {
 
 // ===== Helpers =====
 function clampTime(m, s) {
-  m = Math.max(0, Math.min(59, Number.isFinite(m) ? m : 0));
+  m = Math.max(0, Math.min(TIMER_MAX_MINUTES, Number.isFinite(m) ? m : 0));
   s = Math.max(0, Math.min(59, Number.isFinite(s) ? s : 0));
   return m * 60 + s;
 }
@@ -902,12 +922,12 @@ function pause(options = {}) {
     countdownDeadline = null;
   }
   clearScheduledTick();
-  stopAlarm(true);
+  stopAlarm({ disarm: false });
   if (refresh) refreshControls();
 }
 function reset() {
   pause({ refresh: false });
-  stopAlarm(true);
+  armAlarm();
   const preset = MODE_CONFIG[activeMode]?.seconds ?? 0;
   totalSeconds = preset;
   render();
@@ -932,6 +952,8 @@ function tick() {
 
 // ===== Alarm =====
 function playAlarm() {
+  if (!alarm || alarmDisarmed) return;
+  alarmCanPlay = true;
   if (alarmPlaying) return;
   alarm.loop = true;
   alarm.currentTime = 0;
@@ -950,14 +972,24 @@ function playAlarm() {
     onSuccess();
   }
 }
-function stopAlarm(force = false) {
-  if (!alarmPlaying) return;
-  const focused = force ? true : document.hasFocus();
-  if (!focused) return; // only stop when app is focused
-  alarm.pause();
-  alarm.currentTime = 0;
+function stopAlarm({ disarm = false } = {}) {
+  if (!alarm) return;
+  alarmDisarming = true;
+  alarmCanPlay = false;
   alarmPlaying = false;
   toggleAlarmStopButton(false);
+  try {
+    alarm.pause();
+    alarm.currentTime = 0;
+  } catch (_) {}
+  if (disarm) {
+    alarmDisarmed = true;
+    alarm.removeAttribute('src');
+    alarm.load();
+  }
+  setTimeout(() => {
+    alarmDisarming = false;
+  }, 0);
 }
 
 // ===== Time input =====
@@ -970,9 +1002,10 @@ function openTimeInput() {
 }
 function applyTimeFromInput() {
   const v = (timeInput.value || '').trim();
-  const m = /^([0-5]?\d):([0-5]?\d)$/.exec(v);
+  const m = /^([0-9]?\d):([0-5]?\d)$/.exec(v);
   if (m) {
     pause({ refresh: false });
+    armAlarm();
     totalSeconds = clampTime(parseInt(m[1],10), parseInt(m[2],10));
     render();
     refreshControls();
@@ -1002,7 +1035,6 @@ window.addEventListener('keydown', (e) => {
   if (editing) return;
 
   if (e.code === 'Space')        { e.preventDefault(); if (isRunning()) pause(); else start(); return; }
-  if (e.key === 'Escape')        { reset(); return; }
   if (e.key.toLowerCase() === 'j') {
     e.preventDefault();
     const nextCompact = !compactMode;

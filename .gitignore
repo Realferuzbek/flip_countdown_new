@@ -5,3 +5,6 @@ dist/
 *.asar
 *.blockmap
 .DS_Store
+tmp_*.js
+extracted*.css
+cafe.jpg
